@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QDir>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
@@ -131,6 +133,8 @@ void TestProfileStorage::defaultPathMissingFileLoadsOk()
 
 void TestProfileStorage::defaultPathCorruptFileFails()
 {
+    QDir().mkpath(QFileInfo(ProfileStorage::filePath()).absolutePath());
+
     QFile file(ProfileStorage::filePath());
     QVERIFY(file.open(QIODevice::WriteOnly));
     file.write(QStringLiteral("not json at all").toUtf8());

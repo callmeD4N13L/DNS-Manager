@@ -17,16 +17,17 @@ bool ProfileManager::load()
     const QString path = ProfileStorage::filePath();
     const bool fileExists = QFile::exists(path);
 
+    if (!fileExists) {
+        // First run: seed the well-known providers and persist them.
+        seedDefaults();
+        persist();
+        return true;
+    }
+
     QList<DnsProfile> loaded;
     const OperationResult op = ProfileStorage::load(loaded);
     if (op.success) {
         m_profiles = loaded;
-        return true;
-    }
-
-    if (!fileExists) {
-        seedDefaults();
-        persist();
         return true;
     }
     return false; // file exists but could not be read; keep the list empty
@@ -198,5 +199,7 @@ bool ProfileManager::mapToProfile(const QVariantMap& fields, DnsProfile& out)
     out.primaryIpv6 = fields.value(QStringLiteral("primaryIpv6")).toString();
     out.secondaryIpv6 = fields.value(QStringLiteral("secondaryIpv6")).toString();
     out.isFavorite = fields.value(QStringLiteral("favorite")).toBool();
+    if (out.id.isNull())
+        out.id = QUuid::createUuid(); // ids are generated on creation
     return out.isValid();
 }

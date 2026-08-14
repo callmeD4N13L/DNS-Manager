@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMetaType>
 #include <QString>
 
 // Structured result of a backend operation. Every privileged or system-level

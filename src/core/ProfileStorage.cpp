@@ -27,8 +27,10 @@ QString ProfileStorage::filePath()
 
 OperationResult ProfileStorage::load(QList<DnsProfile>& profiles)
 {
-    if (!QFile::exists(filePath()))
+    if (!QFile::exists(filePath())) {
+        profiles.clear(); // nothing to load resets the output (no stale data)
         return OperationResult::ok(); // no file yet = nothing to load
+    }
     return loadFromFile(filePath(), profiles);
 }
 
@@ -71,7 +73,6 @@ OperationResult ProfileStorage::save(const QList<DnsProfile>& profiles)
 OperationResult ProfileStorage::saveToFile(const QString& path, const QList<DnsProfile>& profiles)
 {
     QJsonArray array;
-    array.reserve(profiles.size());
     for (const DnsProfile& profile : profiles)
         array.append(profile.toJson());
 

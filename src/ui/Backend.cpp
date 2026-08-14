@@ -2,6 +2,7 @@
 
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <QQuickWindow>
 #include <QStyleHints>
 #include <QUrl>
 #include <QtGlobal>

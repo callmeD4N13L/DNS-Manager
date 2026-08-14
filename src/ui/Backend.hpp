@@ -7,11 +7,12 @@
 #include <QStringList>
 #include <QtQml/qqml.h>
 
-class AdapterListModel;
+#include "ui/AdapterListModel.hpp"
+#include "ui/ProfileListModel.hpp"
+
 class AppSettings;
 class DnsLatencyTester;
 class NetworkManager;
-class ProfileListModel;
 class ProfileManager;
 class QQuickWindow;
 class TrayController;

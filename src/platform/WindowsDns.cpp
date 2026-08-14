@@ -21,6 +21,10 @@
 
 #include "platform/WindowsDns.hpp"
 
+// DnsFlushResolverCache is exported by dnsapi but not declared in the windns.h
+// shipped with recent Windows SDKs, so declare it explicitly.
+extern "C" DNS_STATUS WINAPI DnsFlushResolverCache(void);
+
 namespace {
 
 constexpr ULONG kAdapterFlags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
@@ -122,11 +126,11 @@ QHash<quint32, bool> queryDhcpFlags()
 GUID guidFromQUuid(const QUuid& uuid)
 {
     GUID guid;
-    guid.Data1 = uuid.data1();
-    guid.Data2 = uuid.data2();
-    guid.Data3 = uuid.data3();
+    guid.Data1 = uuid.data1;
+    guid.Data2 = uuid.data2;
+    guid.Data3 = uuid.data3;
     for (int i = 0; i < 8; ++i)
-        guid.Data4[i] = uuid.data4()[i];
+        guid.Data4[i] = uuid.data4[i];
     return guid;
 }
 
@@ -153,6 +157,18 @@ DnsConfiguration configurationFromServerList(const QStringList& servers)
     if (ipv6.size() > 1)
         configuration.secondaryIpv6 = ipv6.at(1);
     return configuration;
+}
+
+// Comma-separated wide string for DNS_INTERFACE_SETTINGS::NameServer.
+std::wstring toWideServerList(const QStringList& servers)
+{
+    std::wstring list;
+    for (const QString& server : servers) {
+        if (!list.empty())
+            list += L',';
+        list += server.toStdWString();
+    }
+    return list;
 }
 
 } // namespace
@@ -240,28 +256,28 @@ DnsReadResult readDns(const QUuid& interfaceGuid)
     const GUID guid = guidFromQUuid(interfaceGuid);
 
     // Preferred path: GetInterfaceDnsSettings reports the name servers plus a
-    // Flags field that says whether the list is static (0) or came from DHCP.
-    NET_LUID luid;
-    if (ConvertInterfaceGuidToLuid(&guid, &luid) == NO_ERROR) {
-        DNS_INTERFACE_SETTINGS settings;
-        RtlZeroMemory(&settings, sizeof(settings));
-        settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
+    // Flags field; DNS_SETTING_NAMESERVER is set when a static list is
+    // configured (DHCP-assigned servers leave it clear).
+    DNS_INTERFACE_SETTINGS settings;
+    RtlZeroMemory(&settings, sizeof(settings));
+    settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
 
-        const DWORD ret = GetInterfaceDnsSettings(DnsInterfaceTypeUnspecified, &luid, &settings);
-        if (ret == NO_ERROR) {
-            const bool staticDns = (settings.Flags & DNS_INTERFACE_SETTINGS_STATIC_DNS) != 0;
-            QStringList servers;
-            if (settings.NameServer != nullptr)
-                servers = QString::fromWCharArray(settings.NameServer).split(QLatin1Char(','));
-            DnsReadResult result;
-            result.configuration = configurationFromServerList(servers);
-            result.isDhcp = !staticDns;
-            result.success = true;
-            return result;
-        }
-        // Fall through to GetAdaptersAddresses on error (feature unsupported,
-        // interface gone, access denied, etc.).
+    const DWORD ret = GetInterfaceDnsSettings(guid, &settings);
+    if (ret == NO_ERROR) {
+        const bool staticDns = (settings.Flags & DNS_SETTING_NAMESERVER) != 0;
+        QStringList servers;
+        if (settings.NameServer != nullptr && settings.NameServer[0] != L'\0')
+            servers = QString::fromWCharArray(settings.NameServer).split(QLatin1Char(','));
+        FreeInterfaceDnsSettings(&settings);
+
+        DnsReadResult result;
+        result.configuration = configurationFromServerList(servers);
+        result.isDhcp = !staticDns;
+        result.success = true;
+        return result;
     }
+    // Fall through to GetAdaptersAddresses on error (feature unsupported,
+    // interface gone, access denied, etc.).
 
     // Fallback: enumerate the adapter and collect its configured DNS servers.
     // The adapter list is keyed by the same GUID-derived id.
@@ -290,33 +306,57 @@ OperationResult setDns(const QUuid& interfaceGuid, const QStringList& servers)
 {
     const GUID guid = guidFromQUuid(interfaceGuid);
 
-    NET_LUID luid;
-    if (ConvertInterfaceGuidToLuid(&guid, &luid) != NO_ERROR)
-        return OperationResult::fail(QObject::tr("Network interface not found"));
-
-    DNS_INTERFACE_SETTINGS settings;
-    RtlZeroMemory(&settings, sizeof(settings));
-    settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
-
-    std::wstring nameServers;
-    if (servers.isEmpty()) {
-        // Empty list = give DNS back to DHCP.
-        settings.Flags = DNS_INTERFACE_SETTINGS_RESET_DHCP;
-        settings.NameServer = nullptr;
-    } else {
-        for (int i = 0; i < servers.size(); ++i) {
-            if (i > 0)
-                nameServers += L',';
-            nameServers += servers.at(i).toStdWString();
-        }
-        settings.Flags = DNS_INTERFACE_SETTINGS_NAME_SERVER
-            | DNS_INTERFACE_SETTINGS_IPV4 | DNS_INTERFACE_SETTINGS_IPV6;
-        settings.NameServer = nameServers.data();
+    // Split the requested servers by address family: SetInterfaceDnsSettings
+    // applies to the IPv4 stack by default and to IPv6 only when the
+    // DNS_SETTING_IPV6 flag is set, so each family needs its own call.
+    QStringList ipv4;
+    QStringList ipv6;
+    for (const QString& server : servers) {
+        if (Dns::isValidIpv4(server))
+            ipv4.append(server);
+        else if (Dns::isValidIpv6(server))
+            ipv6.append(server);
     }
 
-    const DWORD ret = SetInterfaceDnsSettings(&luid, &settings);
-    if (ret != NO_ERROR)
-        return OperationResult::fail(errorMessage(ret), static_cast<int>(ret));
+    if (ipv4.isEmpty() && ipv6.isEmpty()) {
+        // Empty list = give DNS back to DHCP. A fully zeroed settings
+        // structure (no flags) resets the interface to DHCP-assigned DNS.
+        DNS_INTERFACE_SETTINGS settings;
+        RtlZeroMemory(&settings, sizeof(settings));
+        settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
+
+        const DWORD ret = SetInterfaceDnsSettings(guid, &settings);
+        if (ret != NO_ERROR)
+            return OperationResult::fail(errorMessage(ret), static_cast<int>(ret));
+        return OperationResult::ok();
+    }
+
+    if (!ipv4.isEmpty()) {
+        const std::wstring nameServers = toWideServerList(ipv4);
+        DNS_INTERFACE_SETTINGS settings;
+        RtlZeroMemory(&settings, sizeof(settings));
+        settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
+        settings.Flags = DNS_SETTING_NAMESERVER;
+        settings.NameServer = const_cast<PWSTR>(nameServers.c_str());
+
+        const DWORD ret = SetInterfaceDnsSettings(guid, &settings);
+        if (ret != NO_ERROR)
+            return OperationResult::fail(errorMessage(ret), static_cast<int>(ret));
+    }
+
+    if (!ipv6.isEmpty()) {
+        const std::wstring nameServers = toWideServerList(ipv6);
+        DNS_INTERFACE_SETTINGS settings;
+        RtlZeroMemory(&settings, sizeof(settings));
+        settings.Version = DNS_INTERFACE_SETTINGS_VERSION1;
+        settings.Flags = DNS_SETTING_NAMESERVER | DNS_SETTING_IPV6;
+        settings.NameServer = const_cast<PWSTR>(nameServers.c_str());
+
+        const DWORD ret = SetInterfaceDnsSettings(guid, &settings);
+        if (ret != NO_ERROR)
+            return OperationResult::fail(errorMessage(ret), static_cast<int>(ret));
+    }
+
     return OperationResult::ok();
 }
 

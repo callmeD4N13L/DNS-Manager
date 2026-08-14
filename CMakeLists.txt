@@ -114,6 +114,11 @@ qt_add_executable(DnsManager WIN32
 # The QML module bundles all .qml files into the executable and generates
 # the qmldir needed by QQmlApplicationEngine::loadFromModule(). C++ types
 # declared with QML_ELEMENT are registered for QML via SOURCES.
+# Theme.qml is a QML-only singleton (registered in the module's qmldir as
+# "singleton Theme"). The legacy "pragma singleton" directive is not accepted
+# by Qt 6.8's qmlcachegen, so the singleton status is declared here instead.
+set_source_files_properties(qml/theme/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
 qt_add_qml_module(DnsManager
     URI DnsManager
     VERSION 1.0
@@ -130,6 +135,9 @@ qt_add_qml_module(DnsManager
         qml/components/SecondaryButton.qml
         qml/components/IconButton.qml
         qml/components/StatusCard.qml
+        qml/components/AdapterRow.qml
+        qml/components/SettingRow.qml
+        qml/components/ThemeOption.qml
         qml/components/DnsCard.qml
         qml/components/PageHeader.qml
         qml/components/SidebarItem.qml
@@ -161,7 +169,13 @@ target_sources(DnsManager PRIVATE
     src/platform/WindowsDns.cpp
 )
 
-target_include_directories(DnsManager PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(DnsManager PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    # QML type registration includes class headers by bare name (e.g.
+    # <Backend.hpp>), so the dirs containing them must be on the include path.
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core"
+)
 
 target_link_libraries(DnsManager PRIVATE
     Qt6::Core
@@ -258,4 +272,4 @@ endif()
 # --- CMake version compatibility guard ------------------------------------
 # qt_add_executable / qt_standard_project_setup require a recent-enough
 # CMake + Qt combination; this is enforced by find_package above.
-message(STATUS "DnsManager ${PROJECT_VERSION} | Qt ${QT_VERSION} | C++${CMAKE_CXX_STANDARD}")
+message(STATUS "DnsManager ${PROJECT_VERSION} | Qt ${Qt6_VERSION} | C++${CMAKE_CXX_STANDARD}")

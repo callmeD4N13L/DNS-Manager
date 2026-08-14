@@ -1,3 +1,5 @@
+#include <QtGlobal>
+
 #if defined(Q_OS_WIN)
 
 #include "core/CrashHandler.hpp"

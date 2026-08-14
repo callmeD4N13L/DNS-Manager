@@ -24,7 +24,6 @@ void TestAppSettings::initTestCase()
     // Redirect QSettings and QStandardPaths to temp locations so no real
     // user config (or the HKCU Run registry entry) is touched.
     QStandardPaths::setTestModeEnabled(true);
-    QSettings::setTestModeEnabled(true);
 }
 
 void TestAppSettings::defaults()

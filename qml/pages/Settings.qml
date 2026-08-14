@@ -6,55 +6,6 @@ import QtQuick.Layouts
 import "../components"
 import "../theme"
 
-component SettingRow: RowLayout {
-    id: settingRow
-
-    property string label: ""
-    property string description: ""
-    property Component control: null
-
-    Layout.fillWidth: true
-    spacing: Theme.spaceLg
-
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: 2
-
-        Text {
-            text: settingRow.label
-            color: Theme.textPrimary
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeBody
-            font.weight: Font.Medium
-        }
-
-        Text {
-            visible: settingRow.description.length > 0
-            text: settingRow.description
-            color: Theme.textSecondary
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeCaption
-            wrapMode: Text.WordWrap
-            Layout.fillWidth: true
-        }
-    }
-
-    Loader {
-        Layout.alignment: Qt.AlignVCenter
-        sourceComponent: settingRow.control
-    }
-}
-
-/* Theme picker looks like a segmented control. */
-component ThemeOption: PrimaryButton {
-    property bool optionSelected: false
-    accentColor: optionSelected ? Theme.accent : Theme.surfaceHover
-    accentText: optionSelected ? Theme.onAccent : Theme.textSecondary
-    implicitHeight: 30
-    leftPadding: 14
-    rightPadding: 14
-}
-
 ColumnLayout {
     id: root
 

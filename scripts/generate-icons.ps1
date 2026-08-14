@@ -6,11 +6,19 @@
 #   - resources/icons/app/app-icon-32.png
 #   - resources/win/app.ico   (256px PNG embedded in an ICO container)
 #
+# By default the icon is drawn programmatically. Pass -SourceImage to derive
+# the icons from an existing PNG instead (e.g. a designer asset), which is
+# stored as resources/icons/app/app-icon-source.png:
+#
+#   .\scripts\generate-icons.ps1 -SourceImage C:\path\to\icon.png
+#
 # Requires: Windows PowerShell 5.1 with System.Drawing.
 # ---------------------------------------------------------------------------
 
 [CmdletBinding()]
-param()
+param(
+    [string]$SourceImage = ''
+)
 
 Add-Type -AssemblyName System.Drawing
 
@@ -105,6 +113,41 @@ function New-IcoFromPng {
     $fs.Close()
     Write-Host "Generated $IcoPath"
 }
+
+function Resize-Png {
+    param([System.Drawing.Image]$Image, [int]$Size, [string]$Path)
+
+    $bmp = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $g.DrawImage($Image, 0, 0, $Size, $Size)
+    $g.Dispose()
+    $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    $bmp.Dispose()
+    Write-Host "Generated $Path"
+}
+
+# --- Source-image mode: derive all icons from an existing PNG -----------------
+if ($SourceImage) {
+    if (-not (Test-Path $SourceImage)) {
+        throw "Source image not found: $SourceImage"
+    }
+    $base = [System.Drawing.Image]::FromFile($SourceImage)
+
+    Copy-Item $SourceImage (Join-Path $pngDir 'app-icon-source.png') -Force
+
+    Resize-Png $base 256 (Join-Path $pngDir 'app-icon-256.png')
+    Resize-Png $base 32  (Join-Path $pngDir 'app-icon-32.png')
+    New-IcoFromPng (Join-Path $pngDir 'app-icon-256.png') (Join-Path $winDir 'app.ico')
+
+    $base.Dispose()
+    Write-Host "Derived icons from $SourceImage (stored as app-icon-source.png)"
+    exit 0
+}
+
+# --- Default mode: draw the icon programmatically -----------------------------
 
 $icon256 = New-AppIcon 256
 $icon32  = New-AppIcon 32

@@ -1,122 +1,130 @@
-# DnsManager
+# Windows DNS Manager
 
-[![CI](https://github.com/DnsManager/DnsManager/actions/workflows/ci.yml/badge.svg)](https://github.com/DnsManager/DnsManager/actions/workflows/ci.yml)
+> Switch, benchmark and troubleshoot your Windows DNS configuration from a
+> modern desktop UI — no registry hacking, no command line.
 
-A modern, fast, lightweight **Windows DNS Manager** built with C++20, Qt 6,
-QML and CMake for Windows 10/11.
+[![CI](https://github.com/callmeD4N13L/windows-dns-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/callmeD4N13L/windows-dns-manager/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/callmeD4N13L/windows-dns-manager)](https://github.com/callmeD4N13L/windows-dns-manager/releases)
+[![License](https://img.shields.io/github/license/callmeD4N13L/windows-dns-manager)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d6)](#requirements)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599c)](CMakeLists.txt)
+[![Qt](https://img.shields.io/badge/Qt-6.5%2B-41cd52)](CMakeLists.txt)
+
+A fast, lightweight **DNS manager for Windows 10/11** built with **C++20**,
+**Qt 6** and **QML**. Inspect every adapter's DNS, switch between saved
+profiles with one click, benchmark resolvers, flush the cache and reset back
+to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
+
+---
 
 ## Features
 
-- View current DNS configuration per network adapter
-- Detect and enumerate network adapters (Ethernet, Wi-Fi, virtual, VPN)
-- Change IPv4 / IPv6 DNS servers
-- Save, edit, duplicate, favorite and search DNS profiles
-- One-click profile switching
-- Reset DNS settings back to DHCP
-- Flush the Windows DNS cache
-- Verified application + cache flush + read-back confirmation
-- Optional DNS latency benchmark across providers
-- Dark / light / system theme
-- System tray integration
-- Profile import / export (JSON)
-- Administrator elevation handled explicitly, never silently
+**Adapters & insights**
 
-## Technology Stack
+- Enumerates Ethernet, Wi-Fi, virtual and VPN adapters with live status
+- Reads current IPv4 / IPv6 DNS (static vs. DHCP) and resolver latency
+- Detect connected / disconnected adapters at a glance
 
-| Layer    | Technology                                  |
-| -------- | ------------------------------------------- |
-| Language | C++20                                       |
-| UI       | Qt 6, QML, Qt Quick, Qt Quick Controls 2    |
-| Build    | CMake (>= 3.25)                             |
-| Backend  | Windows networking APIs (`IPHelper`, Winsock, `SetInterfaceDnsSettings`) |
-| Storage  | Local JSON (`dns_profiles.json`)            |
+**DNS profiles**
 
-## Project Layout
+- Save, edit, favorite and one-click apply named profiles
+- Import / export profiles as portable JSON
+- Seeded with popular resolvers (Cloudflare, Google, Quad9, AdGuard)
 
-```
-DnsManager/
-├── CMakeLists.txt            # Top-level build
-├── cmake/                    # CMake helper modules
-├── config/                   # Default profiles / app data
-├── docs/                     # Design & deployment notes
-├── resources/                # Icons, fonts, qrc
-├── scripts/                  # Build / deploy / package scripts
-├── .github/workflows/        # CI (build + tests) and release packaging
-├── src/
-│   ├── main.cpp
-│   ├── core/                 # DnsManager, NetworkManager
-│   ├── models/               # DnsProfile, NetworkAdapter, DnsConfiguration
-│   ├── platform/             # WindowsDns (API bindings)
-│   ├── storage/              # ProfileManager (JSON)
-│   └── ui/                   # QML-facing controllers
-├── qml/
-│   ├── Main.qml
-│   ├── pages/                # Dashboard, Profiles, Network, Settings
-│   ├── components/           # Sidebar, Cards, Buttons...
-│   └── theme/                # Theme.qml
-└── tests/                    # Unit tests (no admin privileges required)
-```
+**Actions**
 
-## Requirements
+- Apply any profile to the selected adapter (with confirmation option)
+- Reset DNS back to automatic (DHCP)
+- Flush the Windows DNS resolver cache
+- Benchmark the adapter's DNS servers and show the fastest latency
 
-- Windows 10 or 11
-- Qt 6.5+ (Qt Quick + Qt QML modules, MSVC or MinGW kit)
-- CMake 3.25+
-- C++20 compiler (MSVC 2022 or MinGW 12+)
+**Application**
 
-## Building
+- Dark / light / system theme, system tray integration
+- Launch with Windows, start minimized
+- Rotating application log and crash minidumps
+- Administrator elevation requested explicitly (UAC), never silently
 
-See [docs/BUILD.md](docs/BUILD.md) for detailed instructions for Visual
-Studio, VS Code, Qt Creator and the command line.
+## Quick start
+
+Download the latest portable ZIP from
+[Releases](https://github.com/callmeD4N13L/windows-dns-manager/releases),
+extract it anywhere and run `DnsManager.exe`.
+
+Or build from source (Qt 6.5+ required — see
+[docs/BUILD.md](docs/BUILD.md)):
 
 ```powershell
 cmake --preset vs2022-release
 cmake --build --preset vs2022-release
 ```
 
-Qt is auto-detected under `C:/Qt`; override with `-DQT_ROOT=<path>` or edit
-`CMakeUserPresets.json`.
+## Screenshots
 
-## Testing & Continuous Integration
+Screenshots are welcome — add them under `docs/screenshots/` and link them
+here via a pull request.
 
-Unit tests are pure logic (no admin rights, never modify DNS). Run them locally:
+## Documentation
 
-```powershell
-cmake --preset vs2022-release
-cmake --build --preset vs2022-release
-ctest --preset vs2022-release --output-on-failure
+| Topic                 | Where                                        |
+| --------------------- | -------------------------------------------- |
+| Building & running    | [docs/BUILD.md](docs/BUILD.md)               |
+| Packaging & deploying | [docs/DEPLOY.md](docs/DEPLOY.md)             |
+| CI / GitHub Actions   | [.github/workflows](.github/workflows)       |
+
+## Security & reliability
+
+- DNS changes and DHCP resets are performed by an elevated helper launched
+  through the standard Windows UAC prompt — never silently and never by
+  `regedit`-style hacks.
+- All system calls go through the documented Windows APIs
+  (`Get/SetInterfaceDnsSettings`, `IP Helper`, Winsock, `dnsapi`).
+- The test suite runs without admin rights and **never modifies the host's
+  DNS** or registry, so it is safe in CI.
+- Logs rotate automatically; crashes produce minidumps for diagnosis.
+
+## Technology stack
+
+| Layer     | Technology                                        |
+| --------- | ------------------------------------------------- |
+| Language  | C++20                                             |
+| UI        | Qt 6, QML, Qt Quick, Qt Quick Controls 2          |
+| Backend   | Windows networking APIs (`IP Helper`, Winsock, `SetInterfaceDnsSettings`) |
+| Storage   | Local JSON (`dns_profiles.json`)                  |
+| Build     | CMake 3.25+, presets for MSVC / Ninja / MinGW     |
+| Packaging | CPack (ZIP / NSIS) + `windeployqt` deployment     |
+| CI/CD     | GitHub Actions (build, test, release)             |
+
+## Project layout
+
 ```
-
-GitHub Actions runs on every push/PR to `main` (`.github/workflows/ci.yml`):
-install Qt 6.8 (MSVC 2022), build the `vs2022-debug`/`vs2022-release` presets
-and execute the full test suite on `windows-latest`.
-
-Releases are automated from tags (`v*`) via `.github/workflows/release.yml`,
-which builds, runs tests, packages a portable ZIP (windeployqt + QML) and
-uploads it to the GitHub Release.
+├── src/               C++ core, platform and QML-facing controllers
+├── qml/               QML UI (pages, components, theme)
+├── tests/             Qt Test suite (no admin privileges required)
+├── resources/         Icons and Windows resources
+├── cmake/             CMake helper modules
+├── scripts/           Build / deploy / packaging scripts
+└── docs/              Build and deployment guides
+```
 
 ## Roadmap
 
-The project is built incrementally:
+Delivered incrementally in 17 phases — from project initialization through
+UI, DNS operations, profiles, tray, logging, testing, packaging and CI.
 
-- [x] 1. Project initialization
-- [x] 2. CMake configuration
-- [x] 3. Basic Qt/QML window
-- [x] 4. Modern UI layout
-- [x] 5. C++ <-> QML communication
-- [x] 6. Network adapter detection
-- [x] 7. Read current DNS
-- [x] 8. DNS profile system
-- [x] 9. Change DNS
-- [x] 10. Reset DHCP
-- [x] 11. DNS cache flush
-- [x] 12. DNS testing / latency
-- [x] 13. Settings and system tray
-- [x] 14. Error handling and polish
-- [x] 15. Testing
-- [x] 16. Release packaging
-- [x] 17. GitHub Actions CI/CD
+- [x] Project initialization, CMake, Qt/QML window and UI
+- [x] Adapter detection, read/change DNS, DHCP reset, cache flush
+- [x] DNS profiles, favorites, import / export
+- [x] Latency benchmark, settings, system tray
+- [x] Error handling, logging, crash minidumps
+- [x] Unit tests, release packaging, GitHub Actions CI/CD
+
+## Contributing
+
+Contributions are welcome! Open an issue for bugs and feature requests, or a
+pull request for improvements. Follow the existing code style
+(`.clang-format`) and keep the test suite green (`ctest`).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE) — DnsManager Contributors.

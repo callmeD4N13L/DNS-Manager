@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.25)
 project(DnsManager
     VERSION 1.0.0
     DESCRIPTION "Modern Windows DNS manager"
-    HOMEPAGE_URL "https://github.com/DnsManager/DnsManager"
+    HOMEPAGE_URL "https://github.com/callmeD4N13L/windows-dns-manager"
     LANGUAGES CXX
 )
 
@@ -226,8 +226,8 @@ set(CPACK_PACKAGE_NAME "DnsManager")
 set(CPACK_PACKAGE_VENDOR "DnsManager")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Modern Windows DNS manager")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/DnsManager/DnsManager")
-set(CPACK_PACKAGE_CONTACT "https://github.com/DnsManager/DnsManager")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/callmeD4N13L/windows-dns-manager")
+set(CPACK_PACKAGE_CONTACT "https://github.com/callmeD4N13L/windows-dns-manager")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "DnsManager")
 set(CPACK_PACKAGING_INSTALL_PREFIX "DnsManager")
 set(CPACK_PACKAGE_FILE_NAME "DnsManager-${PROJECT_VERSION}-windows-x64")
@@ -240,8 +240,8 @@ if(DNSMGR_BUILD_NSIS)
     set(CPACK_NSIS_PACKAGE_NAME "DNS Manager ${PROJECT_VERSION}")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/app.ico")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "DnsManager.exe")
-    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/DnsManager/DnsManager")
-    set(CPACK_NSIS_CONTACT "https://github.com/DnsManager/DnsManager")
+    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/callmeD4N13L/windows-dns-manager")
+    set(CPACK_NSIS_CONTACT "https://github.com/callmeD4N13L/windows-dns-manager")
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
         set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
     endif()

@@ -26,9 +26,20 @@ jobs:
 
       - name: Configure
         shell: pwsh
-        env:
-          QT_ROOT: ${{ env.QT_ROOT_DIR }}
-        run: cmake --preset vs2022-release
+        run: |
+          $qtRoot = $env:QT_ROOT_DIR
+          Write-Host "QT_ROOT_DIR = $qtRoot"
+          if ($qtRoot -match 'bin[\\/]qmake[^\\/]*\.exe$') {
+            $qtRoot = Split-Path -Parent (Split-Path -Parent $qtRoot)
+            Write-Host "Normalized QT_ROOT = $qtRoot"
+          }
+          $cmakeArgs = @()
+          if (-not [string]::IsNullOrWhiteSpace($qtRoot)) {
+            $cmakeArgs += "-DQT_ROOT=`"$qtRoot`""
+          } else {
+            Write-Warning 'QT_ROOT_DIR unset; relying on PATH / C:\Qt auto-detection'
+          }
+          cmake --preset vs2022-release @cmakeArgs
 
       - name: Build
         shell: pwsh

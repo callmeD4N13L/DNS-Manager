@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build portable ZIP
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          arch: 'win64_msvc2022_64'
+          cache: true
+
+      - name: Configure
+        shell: pwsh
+        env:
+          QT_ROOT: ${{ env.QT_ROOT_DIR }}
+        run: cmake --preset vs2022-release
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build --preset vs2022-release --config Release
+
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build/vs2022-release -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: .\scripts\package.ps1 -Preset vs2022-release -Packager zip
+
+      - name: Smoke-test package
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem dist -Filter 'DnsManager-*.zip' | Select-Object -First 1
+          if (-not $zip) { throw 'No package produced' }
+          Write-Host "Artifact: $($zip.Name) ($([math]::Round($zip.Length / 1MB, 1)) MB)"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $target = Join-Path $env:RUNNER_TEMP 'extract'
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($zip.FullName, $target)
+          $exe = Get-ChildItem $target -Recurse -Filter 'DnsManager.exe' | Select-Object -First 1
+          if (-not $exe) { throw 'DnsManager.exe missing from package' }
+          if (-not (Test-Path (Join-Path $exe.DirectoryName 'Qt6Core.dll'))) {
+            throw 'Qt runtime missing from package'
+          }
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

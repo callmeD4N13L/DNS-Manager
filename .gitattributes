@@ -1,0 +1,10 @@
+# Normalize line endings to LF (matches .editorconfig) regardless of the
+# platform; binary assets must never be normalized or converted.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.qrc text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

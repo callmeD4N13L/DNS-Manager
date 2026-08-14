@@ -3,9 +3,9 @@
 > Switch, benchmark and troubleshoot your Windows DNS configuration from a
 > modern desktop UI — no registry hacking, no command line.
 
-[![CI](https://github.com/callmeD4N13L/windows-dns-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/callmeD4N13L/windows-dns-manager/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/callmeD4N13L/windows-dns-manager)](https://github.com/callmeD4N13L/windows-dns-manager/releases)
-[![License](https://img.shields.io/github/license/callmeD4N13L/windows-dns-manager)](LICENSE)
+[![CI](https://github.com/callmeD4N13L/DNS-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/callmeD4N13L/DNS-Manager/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/callmeD4N13L/DNS-Manager)](https://github.com/callmeD4N13L/DNS-Manager/releases)
+[![License](https://img.shields.io/github/license/callmeD4N13L/DNS-Manager)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d6)](#requirements)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599c)](CMakeLists.txt)
 [![Qt](https://img.shields.io/badge/Qt-6.5%2B-41cd52)](CMakeLists.txt)
@@ -48,7 +48,7 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 ## Quick start
 
 Download the latest portable ZIP from
-[Releases](https://github.com/callmeD4N13L/windows-dns-manager/releases),
+[Releases](https://github.com/callmeD4N13L/DNS-Manager/releases),
 extract it anywhere and run `DnsManager.exe`.
 
 Or build from source (Qt 6.5+ required — see

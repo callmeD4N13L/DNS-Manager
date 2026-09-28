@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/ModernD.PNG" alt="ModernD — DNS Manager icon" width="96" />
+  <img src="assets/ModernD.PNG" alt="Dancy — DNS Manager icon" width="96" />
 </p>
 
 # <img src="assets/ModernD.PNG" alt="D" width="28" /> ModernD DNS Manager

@@ -1,4 +1,8 @@
-# ModernD DNS Manager
+<p align="center">
+  <img src="assets/ModernD.PNG" alt="ModernD — DNS Manager icon" width="96" />
+</p>
+
+# <img src="assets/ModernD.PNG" alt="D" width="28" /> ModernD DNS Manager
 
 > Switch, benchmark and troubleshoot your Windows DNS configuration from a
 > modern desktop UI — no registry hacking, no command line.
@@ -14,6 +18,8 @@ A fast, lightweight **DNS manager for Windows 10/11** built with **C++20**
 and **Electron + Chromium + React + TypeScript**. Inspect every adapter's DNS, switch between saved
 profiles with one click, benchmark resolvers, flush the cache and reset back
 to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
+
+![ModernD icon](assets/ModernD.PNG)
 
 ---
 
@@ -33,7 +39,8 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 
 **Application**
 
-- Dark / light / system theme, system tray integration
+- Dark / light / system theme, custom frameless title bar, smooth scrolling
+- System tray integration — close to tray, apply profiles from the tray menu
 - Launch with Windows, start minimized
 - Rotating application log and crash minidumps
 - Administrator elevation requested explicitly (UAC), never silently
@@ -43,7 +50,25 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 Download the latest release from
 [Releases](https://github.com/callmeD4N13L/DNS-Manager/releases):
 
+| File | What it is |
+| ---- | ---------- |
+| `DNSManager-<version>-windows-x64-setup.exe` | **Recommended.** Inno Setup installer, 64-bit Windows |
+| `DNSManager-<version>-windows-x86-setup.exe` | Inno Setup installer, 32-bit shell |
+| `DNSManager-<version>-windows-x64-setup-electron.exe` | NSIS installer, 64-bit |
+| `DNSManager-<version>-windows-x64-portable.exe` | No install — just run it |
+
+No Qt UI, no Node, no admin rights needed for the UI — elevation (UAC) is
+requested only for actual DNS changes.
+
 Or build from source (see [docs/BUILD.md](docs/BUILD.md)):
+
+```powershell
+cmake --preset vs2022-release
+cmake --build --preset vs2022-release --target dns-core
+cd electron-app
+npm install
+npm run dev            # or: npm run build + npm run dist:portable
+```
 
 ## Documentation
 
@@ -118,6 +143,7 @@ renderer (React/TS) ──contextBridge──▶ Electron main ──stdio──
 - [x] Unit tests, GitHub Actions CI/CD
 - [x] Electron + React UI replaces the former Qt/QML interface
 - [x] Dynamic UI: animated stat cards, latency gauge, sidebar badges, command palette
+- [x] Custom title bar, tray profiles menu, light theme, smooth scrolling
 
 ## Contributing
 
@@ -130,8 +156,11 @@ pull request for improvements. Follow the existing code style
 DNS Manager is free and open source (MIT). If it saves you time, consider
 supporting maintenance and new resolvers:
 
-**Ethereum / EVM (MetaMask): 
-```Wallet Address
+**Ethereum / EVM (MetaMask):**
+```text
 0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5
 ```
 
+## License
+
+[MIT](LICENSE) — DnsManager Contributors.

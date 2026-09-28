@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // DnsCoreBridge: spawns the C++ dns-core sidecar and speaks NDJSON JSON-RPC
-// over its stdio pipes. The sidecar reuses the exact same backend sources
-// (core/, models/, platform/) as the legacy Qt UI — this layer is transport
-// only and contains no DNS/business logic of its own.
+// over its stdio pipes. The sidecar is built from the backend sources
+// (core/, models/, platform/) — this layer is transport only and contains
+// no DNS/business logic of its own.
 // ---------------------------------------------------------------------------
 
 import { spawn, ChildProcess } from "node:child_process";

@@ -4,6 +4,37 @@ All notable changes to DNS Manager are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Custom frameless title bar (`TitleBar.tsx`): drag region with minimize,
+  maximize/restore and close buttons, maximized-state sync from the main
+  process.
+- Close-to-tray dialog: closing the window offers "Minimize to tray" (keeps
+  running in the background) or "Quit app".
+- Tray profile menu: right-click the tray icon to apply any saved profile,
+  add a profile, or flush the DNS cache; single click re-opens the window.
+
+### Fixed
+
+- Light theme: full light palette (`:root.light` overrides for every
+  surface/ink/shadow var) plus system-theme detection via
+  `prefers-color-scheme`.
+- Removed the last `QtQml` include / `QML_ANONYMOUS` / `Q_INVOKABLE`
+  remnants from the backend headers; `.editorconfig` / `.gitignore` no longer
+  reference QML artifacts.
+
+### Changed
+
+- Leaner, modular packaging: asar bundle + separate `bin/dns-core.exe`
+  sidecar, `maximum` compression, pruned file list, LTO + size-optimized
+  Release backend, per-arch `dist:x64` / `dist:x86` scripts and x86 CMake
+  presets.
+- Smoother UI: global smooth scrolling with themed slim scrollbars,
+  card lift on hover, staggered entrances, animated boot screen and page
+  transitions.
+
 ## [2.0.0] — 2026-09-28
 
 Major release: the Qt/QML desktop interface is replaced by an

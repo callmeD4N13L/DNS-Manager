@@ -175,6 +175,56 @@ export function ProfileDialog() {
   );
 }
 
+export function CloseDialog({
+  open,
+  minimizeToTray,
+  onMinimize,
+  onQuit,
+  onCancel,
+}: {
+  open: boolean;
+  minimizeToTray: boolean;
+  onMinimize: () => void;
+  onQuit: () => void;
+  onCancel: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <Modal
+          title="Close DNS Manager?"
+          description="The app can keep running in the system tray so you can switch profiles or re-open it from the notification area."
+          onClose={onCancel}
+          footer={
+            <>
+              <SecondaryButton onClick={onCancel}>Cancel</SecondaryButton>
+              <SecondaryButton onClick={onQuit}>Quit app</SecondaryButton>
+              <PrimaryButton onClick={onMinimize}>
+                {minimizeToTray ? "Minimize to tray" : "Run in background"}
+              </PrimaryButton>
+            </>
+          }
+        >
+          <p className="text-[13px] leading-relaxed text-ink-dim">
+            Minimized to the tray, DNS Manager stays available next to the clock:
+            right-click the tray icon to apply a profile or flush the cache, or
+            click it to re-open the window.
+          </p>
+        </Modal>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export function ConfirmDialog() {
   const { confirmDialog, closeConfirm } = useApp();
   const [busy, setBusy] = useState(false);

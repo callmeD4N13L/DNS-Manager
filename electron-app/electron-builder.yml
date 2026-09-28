@@ -1,6 +1,14 @@
 appId: com.dnsmanager.app
 productName: DNS Manager
 copyright: Copyright © DnsManager Contributors
+# Modular + lightweight: the UI ships as an asar bundle, the C++ backend as a
+# separate sidecar (resources/bin/dns-core.exe) so each layer can be serviced
+# or rebuilt independently. No Qt UI runtime is bundled.
+asar: true
+compression: maximum
+removePackageScripts: true
+npmRebuild: false
+buildDependenciesFromSource: false
 directories:
   app: .
   output: release
@@ -8,6 +16,11 @@ files:
   - electron/dist/**/*
   - renderer/dist/**/*
   - package.json
+  - "!**/*.map"
+  - "!**/*.ts"
+  - "!node_modules/**/test/**"
+  - "!node_modules/**/tests/**"
+  - "!node_modules/**/*.md"
 extraResources:
   - from: ../build/ninja-release/dns-core.exe
     to: bin/dns-core.exe
@@ -24,6 +37,9 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  perMachine: false
+  differentialPackage: false
+  packElevateHelper: false
   shortcutName: DNS Manager
   uninstallDisplayName: DNS Manager
   artifactName: DNSManager-${version}-windows-${arch}-setup-electron.exe

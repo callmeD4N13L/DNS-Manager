@@ -38,7 +38,7 @@ export function ProfileCard({ profile }: { profile: DnsProfile }) {
           ])
         }
         className={cn(
-          "group flex items-center gap-3.5 rounded-xl border bg-raised/70 px-4 py-3 transition-colors",
+          "lift group flex items-center gap-3.5 rounded-xl border bg-raised/70 px-4 py-3",
           isActive ? "border-accent/40 shadow-glow" : "border-line hover:border-ink-faint/40",
         )}
       >

@@ -75,6 +75,27 @@ set(CMAKE_AUTOMOC ON)
 
 # --- Options --------------------------------------------------------------
 option(DNSMGR_BUILD_TESTS "Build DnsManager tests" ON)
+# Lightweight modular binary: LTO + size/link-time opts for the Release
+# dns-core sidecar. The app is NOT a standalone monolith — the Electron UI
+# and this small sidecar ship as separate modules.
+option(DNSMGR_ENABLE_LTO "Enable link-time optimization for Release" ON)
+
+if(DNSMGR_ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT _ipo_ok OUTPUT _ipo_msg)
+    if(_ipo_ok)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+    endif()
+endif()
+
+if(MSVC)
+    # Favor small code, fold identical functions, drop unreferenced chunks.
+    add_compile_options($<$<CONFIG:Release>:/Os> $<$<CONFIG:Release>:/Gy> $<$<CONFIG:Release>:/Gw>)
+    add_link_options($<$<CONFIG:Release>:/OPT:REF> $<$<CONFIG:Release>:/OPT:ICF>)
+elseif(MINGW)
+    add_compile_options($<$<CONFIG:Release>:-Os> $<$<CONFIG:Release>:-ffunction-sections> $<$<CONFIG:Release>:-fdata-sections>)
+    add_link_options($<$<CONFIG:Release>:-Wl,--gc-sections> $<$<CONFIG:Release>:-s>)
+endif()
 
 # --- dns-core: headless JSON-RPC sidecar for the Electron/React UI --------
 # Reuses the backend sources (core/, models/, platform/) with no business-

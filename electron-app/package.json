@@ -20,6 +20,8 @@
     "build": "npm run build:electron && npm run build:renderer",
     "dist": "npm run build && electron-builder",
     "dist:portable": "npm run build && electron-builder --win portable",
+    "dist:x64": "npm run build && electron-builder --win portable nsis --x64",
+    "dist:x86": "npm run build && electron-builder --win portable nsis --ia32",
     "smoke:bridge": "node scripts/smoke-dnscore.mjs",
     "typecheck": "tsc -p renderer --noEmit && tsc -p electron --noEmit"
   },

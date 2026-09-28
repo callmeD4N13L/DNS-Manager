@@ -117,7 +117,7 @@ export function Settings() {
           </div>
           <div className="flex justify-between">
             <span className="text-ink-dim">Backend</span>
-            <span className="text-ink-dim">dns-core · C++ · {app.meta?.platform} / Qt {app.meta?.qtVersion}</span>
+            <span className="text-ink-dim">dns-core · C++ · {app.meta?.platform}{app.meta?.qtVersion ? ` (Qt libs ${app.meta.qtVersion})` : ""}</span>
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
             Switch, benchmark and troubleshoot your Windows DNS configuration. Privileged

@@ -26,14 +26,9 @@ build.ninja
 # Machine-local CMake presets (user Qt paths etc.)
 CMakeUserPresets.json
 
-# Qt / moc / rcc generated
+# Qt (backend Core/Network/Concurrent libs only — no QML/QtQuick) / moc generated
 moc_*.cpp
 moc_*.h
-qrc_*.cpp
-ui_*.h
-.qmlc/
-.qmlcache/
-*.qmlc
 *.qm
 .gcda
 .gcno

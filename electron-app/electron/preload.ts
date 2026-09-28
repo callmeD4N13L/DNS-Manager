@@ -53,6 +53,25 @@ const api = {
   hideWindow: (): Promise<void> => ipcRenderer.invoke("dns:window-hide"),
   quitApp: (): Promise<void> => ipcRenderer.invoke("dns:window-quit"),
 
+  // Custom frameless title-bar controls.
+  minimizeWindow: (): Promise<void> => ipcRenderer.invoke("dns:window-min"),
+  toggleMaximize: (): Promise<{ maximized: boolean }> =>
+    ipcRenderer.invoke("dns:window-max-toggle"),
+  isMaximized: (): Promise<{ maximized: boolean }> =>
+    ipcRenderer.invoke("dns:window-is-maximized"),
+  closeWindow: (): Promise<void> => ipcRenderer.invoke("dns:window-close"),
+  onMaxChanged: (cb: (maximized: boolean) => void): (() => void) => {
+    const listener = (_e: unknown, v: { maximized: boolean }) =>
+      cb(!!v?.maximized);
+    ipcRenderer.on("dns:window-max-changed", listener as (...a: unknown[]) => void);
+    return () => ipcRenderer.removeListener("dns:window-max-changed", listener as (...a: unknown[]) => void);
+  },
+  onOpenAddProfile: (cb: () => void): (() => void) => {
+    const listener = () => cb();
+    ipcRenderer.on("dns:open-add-profile", listener);
+    return () => ipcRenderer.removeListener("dns:open-add-profile", listener);
+  },
+
   onNotification: (cb: (n: BackendNotification) => void): (() => void) => {
     const listener = (_e: unknown, n: BackendNotification) => cb(n);
     ipcRenderer.on("dns:notification", listener as (...a: unknown[]) => void);

@@ -1,5 +1,6 @@
 // Adapter row: status, addressing, DNS state, selection, context menu.
 
+import { motion } from "framer-motion";
 import { Check, RotateCcw } from "lucide-react";
 import { useApp } from "../store";
 import type { NetworkAdapter } from "../types";
@@ -14,7 +15,12 @@ export function AdapterRow({ adapter }: { adapter: NetworkAdapter }) {
 
   return (
     <>
-      <div
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -2 }}
+        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
         role="button"
         tabIndex={0}
         onClick={() => {
@@ -43,7 +49,7 @@ export function AdapterRow({ adapter }: { adapter: NetworkAdapter }) {
           ])
         }
         className={cn(
-          "flex cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3.5 outline-none",
+          "lift flex cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3.5 outline-none",
           selected
             ? "border-accent/40 bg-accent-wash/50 shadow-glow"
             : "border-line bg-raised/70 hover:border-ink-faint/40",
@@ -70,7 +76,7 @@ export function AdapterRow({ adapter }: { adapter: NetworkAdapter }) {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
       {menu.node}
     </>
   );

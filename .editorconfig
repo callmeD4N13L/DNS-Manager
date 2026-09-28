@@ -14,10 +14,10 @@ indent_style = space
 indent_size = 4
 tab_width = 4
 
-[*.{qml,js}]
+[*.{js,jsx,ts,tsx,mjs,cjs}]
 indent_style = space
-indent_size = 4
-tab_width = 4
+indent_size = 2
+tab_width = 2
 
 [*.{cmake,CMakeLists.txt}]
 indent_style = space

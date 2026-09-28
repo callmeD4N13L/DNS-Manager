@@ -54,8 +54,8 @@ export function StatCard({
       initial={{ opacity: 0, y: 14, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.05 * index, type: "spring", stiffness: 320, damping: 28 }}
-      whileHover={{ y: -2 }}
-      className="flex flex-col rounded-2xl border border-line bg-surface shadow-card"
+      whileHover={{ y: -3 }}
+      className="lift flex flex-col rounded-2xl border border-line bg-surface shadow-card"
     >
       <div className="flex items-start justify-between gap-2 px-5 pt-4">
         <span className="truncate text-[12px] font-medium text-ink-dim">{label}</span>

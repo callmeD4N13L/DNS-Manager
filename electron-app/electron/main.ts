@@ -104,12 +104,24 @@ function createWindow(): void {
     title: "DNS Manager",
     backgroundColor: "#0a0f16",
     autoHideMenuBar: true,
+    // Custom title bar rendered by the React UI (TitleBar.tsx):
+    // frameless window, drag region is the title bar itself.
+    frame: false,
+    titleBarStyle: "hidden",
+    titleBarOverlay: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
     },
+  });
+
+  mainWindow.on("maximize", () => {
+    mainWindow?.webContents.send("dns:window-max-changed", { maximized: true });
+  });
+  mainWindow.on("unmaximize", () => {
+    mainWindow?.webContents.send("dns:window-max-changed", { maximized: false });
   });
 
   if (app.isPackaged || process.argv.includes("--smoke-test")) {
@@ -131,24 +143,68 @@ function createWindow(): void {
   });
 }
 
-function ensureTray(): void {
-  if (tray) return;
-  const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, "app.ico")
-    : path.resolve(app.getAppPath(), "..", "resources", "win", "app.ico");
-  let image = nativeImage.createFromPath(iconPath);
-  if (image.isEmpty()) image = nativeImage.createEmpty();
-  tray = new Tray(image);
-  tray.setToolTip("DNS Manager");
+function showWindow(): void {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+// Rebuilds the tray menu so it lists DNS profiles for one-click apply
+// from the notification area, plus quick actions (flush, add, open, quit).
+async function rebuildTrayMenu(): Promise<void> {
+  if (!tray) return;
+  type TrayProfile = { id: string; name: string; isFavorite?: boolean };
+  let profiles: TrayProfile[] = [];
+  try {
+    const r = await bridge.call("profiles.list", {});
+    const list = r["profiles"];
+    if (Array.isArray(list)) {
+      profiles = (list as Array<Record<string, unknown>>)
+        .map((p) => ({
+          id: String(p["id"] ?? ""),
+          name: String(p["name"] ?? "Unnamed"),
+          isFavorite: p["isFavorite"] === true || p["favorite"] === true,
+        }))
+        .filter((p) => p.id.length > 0)
+        .slice(0, 12);
+    }
+  } catch {
+    /* tray still works without the profile list */
+  }
+  const favs = profiles.filter((p) => p.isFavorite);
+  const rest = profiles.filter((p) => !p.isFavorite);
+  const ordered = [...favs, ...rest].slice(0, 10);
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
         label: "Open DNS Manager",
-        click: () => {
-          mainWindow?.show();
-          mainWindow?.focus();
-        },
+        click: () => showWindow(),
       },
+      { type: "separator" },
+      ...(ordered.length > 0
+        ? [
+            {
+              label: "Apply profile",
+              submenu: ordered.map((p) => ({
+                label: `${p.isFavorite ? "★ " : ""}${p.name}`.slice(0, 64),
+                click: () => {
+                  bridge
+                    .call("applyProfile", { id: p.id })
+                    .catch((e) => console.error(e));
+                },
+              })),
+            },
+            {
+              label: "Add profile…",
+              click: () => {
+                showWindow();
+                mainWindow?.webContents.send("dns:open-add-profile", {});
+              },
+            },
+            { type: "separator" } as const,
+          ]
+        : []),
       {
         label: "Flush DNS cache",
         click: () => {
@@ -165,9 +221,24 @@ function ensureTray(): void {
       },
     ]),
   );
-  tray.on("double-click", () => {
-    mainWindow?.show();
-    mainWindow?.focus();
+}
+
+function ensureTray(): void {
+  if (tray) return;
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, "app.ico")
+    : path.resolve(app.getAppPath(), "..", "resources", "win", "app.ico");
+  let image = nativeImage.createFromPath(iconPath);
+  if (image.isEmpty()) image = nativeImage.createEmpty();
+  tray = new Tray(image);
+  tray.setToolTip("DNS Manager");
+  void rebuildTrayMenu();
+  // Single click opens the app; right-click shows the menu above.
+  tray.on("click", () => showWindow());
+  tray.on("double-click", () => showWindow());
+  // Keep the profile list fresh whenever the backend reports changes.
+  bridge.on("notification", () => {
+    void rebuildTrayMenu();
   });
 }
 
@@ -271,6 +342,30 @@ function registerIpc(): void {
   ipcMain.handle("dns:window-quit", () => {
     isQuitting = true;
     app.quit();
+  });
+
+  // --- custom title-bar controls -------------------------------------------
+  ipcMain.handle("dns:window-min", () => {
+    mainWindow?.minimize();
+  });
+  ipcMain.handle("dns:window-max-toggle", () => {
+    if (!mainWindow) return { maximized: false };
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+    return { maximized: mainWindow.isMaximized() };
+  });
+  ipcMain.handle("dns:window-is-maximized", () => ({
+    maximized: !!mainWindow?.isMaximized(),
+  }));
+  // Renderer close button: honor the tray preference. When minimize-to-tray
+  // is on the window hides to the tray (stays running in background);
+  // otherwise the app quits. The renderer shows a confirm modal first.
+  ipcMain.handle("dns:window-close", () => {
+    if (minimizeToTray) mainWindow?.hide();
+    else {
+      isQuitting = true;
+      app.quit();
+    }
   });
 }
 

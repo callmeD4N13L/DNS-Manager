@@ -39,7 +39,7 @@
 //   settings.reset      {}
 //
 // Validation: profile field validation reuses DnsProfile::isValid() via
-// ProfileManager::addProfile/updateProfile (same code path as the Qt UI).
+// ProfileManager::addProfile/updateProfile (same code path as the UI).
 // Path arguments are canonicalised and restricted to *.json files.
 // ---------------------------------------------------------------------------
 
@@ -326,7 +326,7 @@ public:
     }
 
     // Converts camelCase renderer params to the QVariantMap shape
-    // ProfileManager expects (same keys as the QML ProfileDialog used).
+    // ProfileManager expects (same keys as the renderer ProfileDialog sends).
     static QVariantMap toProfileFields(const QJsonObject& params)
     {
         QVariantMap fields;
@@ -428,8 +428,8 @@ int main(int argc, char* argv[])
     const QStringList args = QCoreApplication::arguments();
 
 #if defined(Q_OS_WIN)
-    // Elevated helper entry point (mirrors src/main.cpp): applies a DNS
-    // request file written by NetworkManager and exits with the outcome.
+    // Elevated helper entry point: applies a DNS request file written by
+    // NetworkManager and exits with the outcome.
     const int applyIndex = args.indexOf(QStringLiteral("--apply-dns"));
     if (applyIndex >= 0 && applyIndex + 1 < args.size()) {
         const OperationResult applied =

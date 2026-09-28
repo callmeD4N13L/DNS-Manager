@@ -201,8 +201,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [applySnapshot, notify, patch]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("light", state.settings?.themeMode === "light");
-    document.documentElement.classList.toggle("dark", state.settings?.themeMode !== "light");
+    const mode = state.settings?.themeMode ?? "system";
+    const mq = window.matchMedia?.("(prefers-color-scheme: light)");
+    const apply = () => {
+      const light =
+        mode === "light" || (mode === "system" && !!mq?.matches);
+      document.documentElement.classList.toggle("light", light);
+      document.documentElement.classList.toggle("dark", !light);
+    };
+    apply();
+    if (mode === "system" && mq) {
+      const onChange = () => apply();
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    }
   }, [state.settings?.themeMode]);
 
   // --- actions --------------------------------------------------------------

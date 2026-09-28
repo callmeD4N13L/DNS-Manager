@@ -64,7 +64,7 @@ export function StatusBar() {
     <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-line bg-abyss px-4 font-mono text-[10.5px] text-ink-faint">
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-mint" />
-        dns-core · Qt {meta?.qtVersion ?? "…"}
+        dns-core · C++ {meta?.qtVersion ? `(Qt libs ${meta.qtVersion})` : "…"}
       </span>
       <span>
         {up}/{adapters.length} adapters up

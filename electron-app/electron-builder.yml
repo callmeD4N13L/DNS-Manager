@@ -1,0 +1,31 @@
+appId: com.dnsmanager.app
+productName: DNS Manager
+copyright: Copyright © DnsManager Contributors
+directories:
+  app: .
+  output: release
+files:
+  - electron/dist/**/*
+  - renderer/dist/**/*
+  - package.json
+extraResources:
+  - from: ../build/ninja-release/dns-core.exe
+    to: bin/dns-core.exe
+  - from: ../resources/win/app.ico
+    to: app.ico
+win:
+  target:
+    - target: nsis
+      arch: [x64, ia32]
+    - target: portable
+      arch: [x64, ia32]
+  icon: ../resources/win/app.ico
+  requestedExecutionLevel: asInvoker
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: DNS Manager
+  uninstallDisplayName: DNS Manager
+  artifactName: DNSManager-${version}-windows-${arch}-setup-electron.exe
+portable:
+  artifactName: DNSManager-${version}-windows-${arch}-portable.exe

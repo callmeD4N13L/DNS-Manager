@@ -1,0 +1,10 @@
+DNS Manager — Support the project
+===============================
+
+DNS Manager is free and open source (MIT). If it saves you time, consider
+supporting maintenance and new resolvers with a small donation:
+
+  Ethereum / EVM (MetaMask): 0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5
+
+Thank you for supporting independent open-source work.
+Project: https://github.com/callmeD4N13L/DNS-Manager

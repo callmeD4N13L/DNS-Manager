@@ -29,7 +29,8 @@ $winDir = Join-Path $root 'resources\win'
 New-Item -ItemType Directory -Force -Path $pngDir | Out-Null
 New-Item -ItemType Directory -Force -Path $winDir | Out-Null
 
-# Colors (must stay in sync with qml/theme/Theme.qml)
+# Brand colors (kept in sync with electron-app/renderer/src/theme.css:
+# --color-abyss #0a0f16 / --color-accent #22d3ee)
 $bgColor   = [System.Drawing.Color]::FromArgb(255, 23, 24, 28)   # #17181c
 $accent    = [System.Drawing.Color]::FromArgb(255, 76, 194, 255) # #4cc2ff
 

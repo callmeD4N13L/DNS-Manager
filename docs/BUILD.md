@@ -1,8 +1,12 @@
 # Building DnsManager
 
 This document explains how to configure, build, run and test DnsManager on
-Windows 10/11 using Visual Studio, Visual Studio Code, Qt Creator or the
-command line.
+Windows 10/11 using Visual Studio, Visual Studio Code or the command line.
+
+The C++ build produces `dns-core.exe`, a headless backend sidecar. The user
+interface is the Electron + React app in `electron-app/` — there is no Qt UI
+(QML/Widgets/Quick were removed); Qt is used only as a C++ utility library
+(Core/Network/Concurrent) inside the backend.
 
 ## Prerequisites
 
@@ -11,22 +15,19 @@ command line.
 | Windows         | 10 (1809+) or 11                                    |
 | CMake           | 3.25+                                               |
 | Compiler        | MSVC 2022 (v143) or MinGW-w64 (GCC 12+)             |
-| Qt              | 6.5+ with `Qt Quick`, `Qt QML`, `Qt Quick Controls 2` |
+| Qt              | 6.5+ base kit (`Qt Core`, `Network`, `Concurrent`, `Test`) — backend library only |
 | Ninja (optional) | Recommended for fast single-config builds          |
 | Git             | 2.30+                                               |
+| Node.js         | 20+ with npm (for `electron-app/`)                  |
 
 ### Installing Qt
 
 Use the [Qt Online Installer](https://www.qt.io/download-qt-installer) and install
-at least these components for **Qt 6.8** (or newer):
+at least **Qt 6.8.x > MSVC 2022 64-bit** (the base kit already contains every
+module the backend needs — no Quick, QML or Widgets components required).
 
-- `Qt 6.8.x > MSVC 2022 64-bit`
-- `Qt 6.8.x > Additional Libraries > Qt Quick`
-- `Qt 6.8.x > Additional Libraries > Qt Quick Controls 2`
-- `Qt 6.8.x > Additional Libraries > Qt QML`
-
-> The development tools (Qt Creator, MinGW, Ninja, CMake, Debugging Tools) are
-> optional but convenient. If you install Ninja separately, put it in `PATH`.
+> Ninja (via the separate installer or `choco`/`winget`) must be in `PATH`
+> for the `ninja-*` presets. If you install Ninja separately, put it in `PATH`.
 
 ## How CMake finds Qt
 
@@ -87,12 +88,6 @@ Requires the **CMake Tools** extension.
 For Ninja support with CMake Tools, add the Ninja directory to `PATH` and set
 `cmake.generator` in settings if needed.
 
-### Qt Creator
-
-1. Tools > Options > Kits, create or select a **Desktop Qt 6.8.x** kit.
-2. Open the top-level `CMakeLists.txt` as a project.
-3. Qt Creator reads `CMakePresets.json` — choose a preset in *Projects > Build*.
-
 ## Debug vs Release
 
 - **Release** — optimized, no debug symbols, used for distribution.
@@ -104,17 +99,26 @@ is selected at build time (`--config Release` / `--config Debug`).
 
 ## Running
 
-```powershell
-# Visual Studio
-.\build\vs2022-release\Release\DnsManager.exe
+`dns-core.exe` is headless (NDJSON over stdio) — you run it through the
+Electron UI, which spawns and supervises it automatically:
 
-# Ninja / MinGW
-.\build\ninja-release\DnsManager.exe
+```powershell
+# 1. Build the backend once
+cmake --preset vs2022-release
+cmake --build --preset vs2022-release --target dns-core
+
+# 2. Run the desktop app (dev, with hot reload)
+cd electron-app
+npm install
+npm run dev
+
+# or launch the packaged portable build:
+.\electron-app\release\DNSManager-2.0.0-windows-x64-portable.exe
 ```
 
 > Changing the DNS configuration of an adapter requires administrator
-> privileges. The application will request elevation via UAC only for those
-> operations and explain which operations need it.
+> privileges. The backend requests elevation via UAC only for those
+> operations and explains which operations need it.
 
 ## Running tests
 
@@ -130,26 +134,28 @@ automatically** — only non-privileged unit tests run in CI.
 ### Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) builds the `vs2022-debug` and
-`vs2022-release` presets on `windows-latest` with Qt 6.8 and runs the full
-`ctest` suite on every push/PR to `main`. Tag pushes (`v*`) trigger
-`.github/workflows/release.yml`, which packages a portable ZIP and attaches it
-to the GitHub Release.
+`vs2022-release` presets on `windows-2022` with Qt 6.8 and runs the full
+`ctest` suite on every push/PR to `main`. Tag pushes (`v*`, matching
+`electron-app/package.json` and `CMakeLists.txt`) trigger
+`.github/workflows/release.yml`, which builds the backend, runs the C++ tests,
+packages portable + NSIS + Inno Setup installers for x64 and x86, and attaches
+them to the GitHub Release with notes rendered from `CHANGELOG.md`.
 
 ## Common errors
 
 | Symptom                                | Cause / fix                                             |
 |----------------------------------------|---------------------------------------------------------|
 | `Could not find a package configuration file provided by "Qt6"` | Qt not found. Set `QT_ROOT` or `CMAKE_PREFIX_PATH`. |
-| `Qt6 found but the target Qt6::QuickControls2 doesn't exist` | Qt Quick Controls 2 component not installed. Re-run the Qt installer. |
 | `CMake was unable to find a build program corresponding to "Ninja"` | Ninja not in `PATH`. Install Ninja or use the `vs2022-*` presets. |
-| `CMAKE_CXX_COMPILER not set, after EnableLanguage` | No C++ toolchain. Install Visual Studio Build Tools / MinGW. |
+| `CMAKE_CXX_COMPILER not set, after EnableLanguage` | No C++ toolchain. Run from a Visual Studio Developer shell, or install Build Tools / MinGW. |
 | `error LNK2038: mismatch detected for 'RuntimeLibrary'` | Mixing Debug and Release Qt/compiler settings. Keep one configuration consistently. |
 | `unrecognized option ... clang-format` | Code style is enforced by `.clang-format`; run `clang-format -i` on changed files. |
 
 ## Packaging
 
-Deployment is covered in Phase 16 — see `docs/DEPLOY.md`. Quick start:
+Deployment is covered in `docs/DEPLOY.md`. Quick start:
 
 ```powershell
-.\scripts\package.ps1            # build + windeployqt + portable ZIP
+cd electron-app
+npm run dist:portable   # portable EXE with the dns-core sidecar bundled
 ```

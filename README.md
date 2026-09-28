@@ -8,10 +8,10 @@
 [![License](https://img.shields.io/github/license/callmeD4N13L/DNS-Manager)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d6)](#requirements)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599c)](CMakeLists.txt)
-[![Qt](https://img.shields.io/badge/Qt-6.5%2B-41cd52)](CMakeLists.txt)
+[![Electron](https://img.shields.io/badge/Electron-Chromium-47848f)](electron-app/)
 
-A fast, lightweight **DNS manager for Windows 10/11** built with **C++20**,
-**Qt 6** and **QML**. Inspect every adapter's DNS, switch between saved
+A fast, lightweight **DNS manager for Windows 10/11** built with **C++20**
+and **Electron + Chromium + React + TypeScript**. Inspect every adapter's DNS, switch between saved
 profiles with one click, benchmark resolvers, flush the cache and reset back
 to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 
@@ -47,16 +47,27 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 
 ## Quick start
 
-Download the latest portable ZIP from
-[Releases](https://github.com/callmeD4N13L/DNS-Manager/releases),
-extract it anywhere and run `DnsManager.exe`.
+Download the latest release from
+[Releases](https://github.com/callmeD4N13L/DNS-Manager/releases):
 
-Or build from source (Qt 6.5+ required — see
-[docs/BUILD.md](docs/BUILD.md)):
+| File | What it is |
+| ---- | ---------- |
+| `DNSManager-<version>-windows-x64-setup.exe` | **Recommended.** Inno Setup installer, 64-bit Windows |
+| `DNSManager-<version>-windows-x86-setup.exe` | Inno Setup installer, 32-bit shell |
+| `DNSManager-<version>-windows-x64-setup-electron.exe` | NSIS installer, 64-bit |
+| `DNSManager-<version>-windows-x64-portable.exe` | No install — just run it |
+
+No Qt, no Node, no admin rights needed for the UI — elevation (UAC) is
+requested only for actual DNS changes.
+
+Or build from source (see [docs/BUILD.md](docs/BUILD.md)):
 
 ```powershell
 cmake --preset vs2022-release
-cmake --build --preset vs2022-release
+cmake --build --preset vs2022-release --target dns-core
+cd electron-app
+npm install
+npm run dev            # or: npm run build + npm run dist:portable
 ```
 
 ## Screenshots
@@ -87,43 +98,69 @@ here via a pull request.
 
 | Layer     | Technology                                        |
 | --------- | ------------------------------------------------- |
-| Language  | C++20                                             |
-| UI        | Qt 6, QML, Qt Quick, Qt Quick Controls 2          |
-| Backend   | Windows networking APIs (`IP Helper`, Winsock, `SetInterfaceDnsSettings`) |
+| Language  | C++20 (backend) + TypeScript (UI)                 |
+| UI        | Electron, Chromium, React 19, TypeScript, Tailwind CSS 4, Framer Motion, lucide-react (`electron-app/`) |
+| Backend   | C++20 services over Windows networking APIs (`IP Helper`, Winsock, `SetInterfaceDnsSettings`), Qt 6 Core/Network/Concurrent as utility library (no Qt UI) |
+| Bridge    | `dns-core.exe` sidecar, NDJSON JSON-RPC over stdio |
 | Storage   | Local JSON (`dns_profiles.json`)                  |
-| Build     | CMake 3.25+, presets for MSVC / Ninja / MinGW     |
-| Packaging | CPack (ZIP / NSIS) + `windeployqt` deployment     |
+| Build     | CMake 3.25+, presets for MSVC / Ninja / MinGW; npm + electron-builder for the desktop shell |
+| Packaging | electron-builder portable EXE / NSIS + Inno Setup (`installer/inno/`) |
 | CI/CD     | GitHub Actions (build, test, release)             |
+
+> **v2.0.0 note:** the former Qt/QML interface was replaced by the
+> Electron/Chromium UI. Qt remains only as a backend C++ library
+> (Core/Network/Concurrent). See [CHANGELOG.md](CHANGELOG.md) for the full
+> migration notes.
+
+## Architecture (`electron-app/`)
+
+The entire user interface is rendered by **Electron → Chromium → React +
+TypeScript** (`electron-app/`, see its [README](electron-app/README.md)).
+The C++ backend ships as a headless `dns-core.exe` sidecar built from
+`src/core`, `src/models`, `src/platform` and `src/cli`, speaking NDJSON
+JSON-RPC over stdio. There is no Qt interface: no QML, no Widgets, no
+Qt Quick — the `qml/` tree and QML bindings were removed.
+
+```
+renderer (React/TS) ──contextBridge──▶ Electron main ──stdio──▶ dns-core (C++)
+```
 
 ## Project layout
 
 ```
-├── src/               C++ core, platform and QML-facing controllers
-├── qml/               QML UI (pages, components, theme)
-├── tests/             Qt Test suite (no admin privileges required)
-├── resources/         Icons and Windows resources
-├── cmake/             CMake helper modules
-├── scripts/           Build / deploy / packaging scripts
-└── docs/              Build and deployment guides
+├── src/cli           dns-core entry point (headless JSON-RPC sidecar)
+├── src/core          Backend services (network, profiles, settings, ...)
+├── src/models        Value models (adapters, profiles, DNS config)
+├── src/platform      Windows system layer (IP Helper, Winsock, dnsapi)
+├── electron-app/     Entire UI: Electron + React + TypeScript + Tailwind
+├── installer/inno    Inno Setup installers (x64 + x86)
+├── tests/            C++ unit tests (no admin privileges required)
+├── resources/        App icons + dns-core VERSIONINFO (consumed by the builds)
+├── scripts/          Icon generation helpers
+└── docs/             Build and deployment guides
 ```
 
 ## Roadmap
 
-Delivered incrementally in 17 phases — from project initialization through
-UI, DNS operations, profiles, tray, logging, testing, packaging and CI.
-
-- [x] Project initialization, CMake, Qt/QML window and UI
-- [x] Adapter detection, read/change DNS, DHCP reset, cache flush
+- [x] C++ backend: adapter detection, DNS read/apply, DHCP reset, cache flush
 - [x] DNS profiles, favorites, import / export
-- [x] Latency benchmark, settings, system tray
-- [x] Error handling, logging, crash minidumps
-- [x] Unit tests, release packaging, GitHub Actions CI/CD
+- [x] Latency benchmark, settings, logging, crash minidumps
+- [x] Unit tests, GitHub Actions CI/CD
+- [x] Electron + React UI replaces the former Qt/QML interface
+- [x] Dynamic UI: animated stat cards, latency gauge, sidebar badges, command palette
 
 ## Contributing
 
 Contributions are welcome! Open an issue for bugs and feature requests, or a
 pull request for improvements. Follow the existing code style
 (`.clang-format`) and keep the test suite green (`ctest`).
+
+## Support
+
+DNS Manager is free and open source (MIT). If it saves you time, consider
+supporting maintenance and new resolvers:
+
+**Ethereum / EVM (MetaMask): `0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5`**
 
 ## License
 

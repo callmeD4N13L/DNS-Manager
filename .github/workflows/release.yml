@@ -1,21 +1,58 @@
 name: Release
 
+# Publishes a versioned GitHub Release with every distributable attached:
+#   - portable EXEs            (x64 + x86)
+#   - electron-builder NSIS    (x64 + x86)
+#   - Inno Setup installers    (x64 + x86, from installer/inno/*.iss)
+#
+# Trigger: push a tag like `v2.0.0` (must match electron-app/package.json),
+# or run manually (workflow_dispatch) for a dry-run / re-release.
+#
+# The release body is rendered from CHANGELOG.md plus GitHub's generated
+# notes, so users always see fixes, updates and upgrade guidance.
+
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to (re-)release, e.g. v2.0.0. Leave empty to use the current ref.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
 
 jobs:
   package:
-    name: Build portable ZIP
+    name: Build + publish release
     runs-on: windows-2022
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.event.inputs.tag }}'
+          if ([string]::IsNullOrWhiteSpace($tag)) { $tag = '${{ github.ref_name }}' }
+          if (-not $tag.StartsWith('v')) { throw "Tag must look like v2.0.0, got '$tag'" }
+          $version = $tag.TrimStart('v')
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Releasing $tag (version $version)"
+
+          $pkg = (Get-Content electron-app/package.json -Raw | ConvertFrom-Json).version
+          if ($pkg -ne $version) { throw "Tag $tag does not match electron-app/package.json ($pkg)" }
+          $cmake = Select-String -Path CMakeLists.txt -Pattern 'VERSION ([0-9]+\.[0-9]+\.[0-9]+)' |
+            Select-Object -First 1 -ExpandProperty Matches |
+            ForEach-Object { $_.Groups[1].Value }
+          if ($cmake -ne $version) { throw "Tag $tag does not match CMakeLists.txt ($cmake)" }
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -24,11 +61,13 @@ jobs:
           arch: 'win64_msvc2022_64'
           cache: true
 
-      - name: Configure
+      - name: Configure backend
         shell: pwsh
         run: |
           $qtRoot = $env:QT_ROOT_DIR
           Write-Host "QT_ROOT_DIR = $qtRoot"
+          # Guard against a known install-qt-action quirk where QT_ROOT_DIR
+          # can point at bin\qmake.exe instead of the Qt prefix root.
           if ($qtRoot -match 'bin[\\/]qmake[^\\/]*\.exe$') {
             $qtRoot = Split-Path -Parent (Split-Path -Parent $qtRoot)
             Write-Host "Normalized QT_ROOT = $qtRoot"
@@ -39,37 +78,126 @@ jobs:
           } else {
             Write-Warning 'QT_ROOT_DIR unset; relying on PATH / C:\Qt auto-detection'
           }
-          cmake --preset vs2022-release @cmakeArgs
+          # Ninja preset: matches electron-builder's extraResources sidecar path
+          # (build/ninja-release/dns-core.exe). Ninja ships with the runner image.
+          cmake --preset ninja-release @cmakeArgs
 
-      - name: Build
+      - name: Build backend
         shell: pwsh
-        run: cmake --build --preset vs2022-release --config Release
+        run: cmake --build --preset ninja-release
 
-      - name: Test
+      - name: Test backend
         shell: pwsh
-        run: ctest --test-dir build/vs2022-release -C Release --output-on-failure
+        run: ctest --preset ninja-release --output-on-failure
 
-      - name: Package
-        shell: pwsh
-        run: .\scripts\package.ps1 -Preset vs2022-release -Packager zip
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: electron-app/package-lock.json
 
-      - name: Smoke-test package
+      - name: Build UI
         shell: pwsh
         run: |
-          $zip = Get-ChildItem dist -Filter 'DnsManager-*.zip' | Select-Object -First 1
-          if (-not $zip) { throw 'No package produced' }
-          Write-Host "Artifact: $($zip.Name) ($([math]::Round($zip.Length / 1MB, 1)) MB)"
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $target = Join-Path $env:RUNNER_TEMP 'extract'
-          [System.IO.Compression.ZipFile]::ExtractToDirectory($zip.FullName, $target)
-          $exe = Get-ChildItem $target -Recurse -Filter 'DnsManager.exe' | Select-Object -First 1
-          if (-not $exe) { throw 'DnsManager.exe missing from package' }
-          if (-not (Test-Path (Join-Path $exe.DirectoryName 'Qt6Core.dll'))) {
-            throw 'Qt runtime missing from package'
+          cd electron-app
+          npm ci
+          npm run build
+
+      - name: Smoke-test backend bridge
+        shell: pwsh
+        run: |
+          cd electron-app
+          node scripts/smoke-dnscore.mjs ../build/ninja-release/dns-core.exe
+
+      - name: Package (electron-builder, x64 + x86)
+        shell: pwsh
+        run: |
+          cd electron-app
+          npx electron-builder --win --x64 --ia32 --publish never
+
+      - name: Setup Inno Setup
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          inno-setup-version: 6.3.3
+
+      - name: Build Inno Setup installers (x64 + x86)
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          iscc "installer/inno/DNSManager-x64.iss" "/DAppVersion=$version"
+          iscc "installer/inno/DNSManager-x86.iss" "/DAppVersion=$version"
+          Get-ChildItem installer/output | Format-Table Name, Length
+
+      - name: Verify artifacts
+        shell: pwsh
+        run: |
+          $expected = @(
+            'electron-app/release/DNSManager-*-windows-x64-portable.exe',
+            'electron-app/release/DNSManager-*-windows-ia32-portable.exe',
+            'electron-app/release/DNSManager-*-windows-x64-setup-electron.exe',
+            'electron-app/release/DNSManager-*-windows-ia32-setup-electron.exe',
+            'installer/output/DNSManager-*-windows-x64-setup.exe',
+            'installer/output/DNSManager-*-windows-x86-setup.exe'
+          )
+          foreach ($pattern in $expected) {
+            $hit = Get-ChildItem $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $hit) { throw "Missing expected artifact: $pattern" }
+            Write-Host "OK: $($hit.Name) ($([math]::Round($hit.Length / 1MB, 1)) MB)"
           }
+
+      - name: Render release notes
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $tag = '${{ steps.version.outputs.tag }}'
+          $notes = "release-notes-$version.md"
+          $header = @(
+            "# DNS Manager $tag",
+            '',
+            'Electron + Chromium desktop UI (React + TypeScript) over the C++ `dns-core` backend.',
+            '',
+            '## Download',
+            '',
+            '| File | For |',
+            '| ---- | --- |',
+            "| `DNSManager-$version-windows-x64-setup.exe` | **Recommended.** Inno Setup installer, 64-bit Windows |",
+            "| `DNSManager-$version-windows-x86-setup.exe` | Inno Setup installer, 32-bit shell (runs on 64-bit Windows) |",
+            "| `DNSManager-$version-windows-x64-setup-electron.exe` | NSIS installer, 64-bit |",
+            "| `DNSManager-$version-windows-ia32-setup-electron.exe` | NSIS installer, 32-bit |",
+            "| `DNSManager-$version-windows-x64-portable.exe` | No install, 64-bit — just run it |",
+            "| `DNSManager-$version-windows-ia32-portable.exe` | No install, 32-bit shell |",
+            '',
+            'Requires Windows 10 (1809+) or 11. No Qt, no Node, no admin rights for the UI —',
+            'elevation (UAC) is requested only for actual DNS changes.',
+            ''
+          )
+          $changelog = Get-Content CHANGELOG.md -Raw -ErrorAction SilentlyContinue
+          if ($changelog -match '(?s)## \[2\.0\.0\].*?(?=## \[|\z)') {
+            $header += '## What changed'
+            $header += ''
+            $header += $Matches[0].Trim()
+            $header += ''
+          }
+          $header += '---'
+          $header += 'If DNS Manager saves you time, consider supporting maintenance:'
+          $header += 'Ethereum / EVM (MetaMask): `0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5`'
+          $header -join "`n" | Set-Content $notes -NoNewline
+          "notes_file=$notes" >> $env:GITHUB_OUTPUT
+          Get-Content $notes | Select-Object -First 20
+        id: notes
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.zip
+          tag_name: ${{ steps.version.outputs.tag }}
+          body_path: ${{ steps.notes.outputs.notes_file }}
           generate_release_notes: true
+          make_latest: true
+          files: |
+            electron-app/release/DNSManager-*-windows-x64-portable.exe
+            electron-app/release/DNSManager-*-windows-ia32-portable.exe
+            electron-app/release/DNSManager-*-windows-x64-setup-electron.exe
+            electron-app/release/DNSManager-*-windows-ia32-setup-electron.exe
+            installer/output/DNSManager-*-windows-x64-setup.exe
+            installer/output/DNSManager-*-windows-x86-setup.exe

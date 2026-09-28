@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * DNS Manager design system — single source of truth for the whole renderer.
+ * Dark-first. Deep neutral backgrounds, subtle elevation, one cyan accent.
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  --color-void: #06090e;
+  --color-abyss: #0a0f16;
+  --color-surface: #101722;
+  --color-raised: #151e2c;
+  --color-overlay: #1a2434;
+  --color-hover: #1c2637;
+  --color-line: #1e2b3d;
+  --color-line-soft: #17202e;
+
+  --color-ink: #e8f1fc;
+  --color-ink-dim: #93a3b8;
+  --color-ink-faint: #55647a;
+
+  --color-accent: #22d3ee;
+  --color-accent-soft: #67e8f9;
+  --color-accent-deep: #0e7490;
+  --color-accent-ink: #04222b;
+  --color-accent-wash: rgba(34, 211, 238, 0.09);
+
+  --color-mint: #34d399;
+  --color-mint-wash: rgba(52, 211, 153, 0.1);
+  --color-amber: #fbbf24;
+  --color-amber-wash: rgba(251, 191, 36, 0.1);
+  --color-rose: #fb7185;
+  --color-rose-wash: rgba(251, 113, 133, 0.1);
+  --color-sky: #38bdf8;
+  --color-sky-wash: rgba(56, 189, 248, 0.1);
+
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 4px 8px rgba(0, 0, 0, 0.45), 0 20px 48px -12px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 0 1px rgba(34, 211, 238, 0.25), 0 0 24px -4px rgba(34, 211, 238, 0.35);
+
+  --animate-fade-up: fade-up 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-scale-in: scale-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-toast-in: toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96) translateY(4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-abyss);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+.selectable {
+  user-select: text;
+}
+
+/* Slim, theme-matched scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #263449 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #263449;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Focus visibility for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* GPU-friendly transitions on interactive primitives */
+button,
+a,
+[role="button"] {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    transform 80ms ease,
+    box-shadow 160ms ease,
+    opacity 120ms ease;
+}
+button:active:not(:disabled),
+[role="button"]:active {
+  transform: translateY(1px) scale(0.99);
+}

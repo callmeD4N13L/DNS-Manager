@@ -1,13 +1,20 @@
 # ---------------------------------------------------------------------------
 # DnsManager - modern Windows DNS manager
-# Target: Windows 10/11, Qt 6, C++20, QML
+# Target: Windows 10/11, C++20
+#
+# Architecture: the ONLY user interface is the Electron + React app in
+# electron-app/. The C++ side is a headless JSON-RPC sidecar (dns-core)
+# built here from src/core, src/models, src/platform and src/cli. Qt is
+# used purely as a C++ utility library (Core/Network/Concurrent: event
+# loop, settings, UDP sockets, threads) — there are no Qt Widgets, no
+# Qt Quick, no QML and no Qt GUI of any kind.
 # ---------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.25)
 
 project(DnsManager
-    VERSION 1.0.0
-    DESCRIPTION "Modern Windows DNS manager"
+    VERSION 2.0.0
+    DESCRIPTION "Modern Windows DNS manager (C++ backend + Electron/React UI)"
     HOMEPAGE_URL "https://github.com/callmeD4N13L/DNS-Manager"
     LANGUAGES CXX
 )
@@ -23,12 +30,14 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# --- Qt discovery --------------------------------------------------------
+# --- Qt discovery (C++ utility library for the backend only) ---------------
 # Qt can be located in three ways (first match wins):
 #   1. The cache variable QT_ROOT (e.g. -DQT_ROOT=C:/Qt/6.8.0/msvc2022_64)
 #   2. The environment variable QT_ROOT
 #   3. CMAKE_PREFIX_PATH explicitly set by the user / preset
 #   4. Auto-detection under C:/Qt (latest installed version)
+# Only the Core/Network/Concurrent modules are required — no Gui, Widgets,
+# Quick, Qml or QuickControls2.
 
 if(NOT DEFINED QT_ROOT AND DEFINED ENV{QT_ROOT})
     set(QT_ROOT "$ENV{QT_ROOT}")
@@ -56,104 +65,23 @@ endif()
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
-    Gui
     Network
-    Quick
-    Qml
-    QuickControls2
     Concurrent
-    Widgets
 )
 
-# Enables AUTOMOC/AUTOUIC/AUTORCC and standard Qt project defaults.
-qt_standard_project_setup()
+# Enables AUTOMOC for the Q_OBJECT backend classes (no AUTOUIC/AUTORCC:
+# there are no widgets, forms or Qt resources anymore).
+set(CMAKE_AUTOMOC ON)
 
 # --- Options --------------------------------------------------------------
 option(DNSMGR_BUILD_TESTS "Build DnsManager tests" ON)
-option(DNSMGR_BUILD_NSIS "Build an NSIS installer with CPack (requires NSIS)" OFF)
 
-# --- Windows version resource --------------------------------------------
-# Generate version.rc from a template so FILEVERSION always matches the
-# project version instead of being hard-coded.
-if(WIN32)
-    string(REPLACE "." ";" _dnsmgr_version_parts "${PROJECT_VERSION}")
-    list(LENGTH _dnsmgr_version_parts _dnsmgr_version_count)
-    foreach(_idx RANGE 0 3)
-        if(_idx LESS _dnsmgr_version_count)
-            list(GET _dnsmgr_version_parts ${_idx} _dnsmgr_part)
-        else()
-            set(_dnsmgr_part 0)
-        endif()
-        if(NOT _dnsmgr_part MATCHES "^[0-9]+$")
-            set(_dnsmgr_part 0)
-        endif()
-        if(_idx EQUAL 0)
-            set(DNSMGR_VERSION_MAJOR "${_dnsmgr_part}")
-        elseif(_idx EQUAL 1)
-            set(DNSMGR_VERSION_MINOR "${_dnsmgr_part}")
-        elseif(_idx EQUAL 2)
-            set(DNSMGR_VERSION_PATCH "${_dnsmgr_part}")
-        else()
-            set(DNSMGR_VERSION_BUILD "${_dnsmgr_part}")
-        endif()
-    endforeach()
-    set(DNSMGR_APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/app.ico")
-
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/version.rc.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/resources/win/version.rc"
-        @ONLY
-    )
-endif()
-
-# --- Application target ---------------------------------------------------
-qt_add_executable(DnsManager WIN32
-    src/main.cpp
-)
-
-# The QML module bundles all .qml files into the executable and generates
-# the qmldir needed by QQmlApplicationEngine::loadFromModule(). C++ types
-# declared with QML_ELEMENT are registered for QML via SOURCES.
-# Theme.qml is a QML-only singleton (registered in the module's qmldir as
-# "singleton Theme"). The legacy "pragma singleton" directive is not accepted
-# by Qt 6.8's qmlcachegen, so the singleton status is declared here instead.
-set_source_files_properties(qml/theme/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-
-qt_add_qml_module(DnsManager
-    URI DnsManager
-    VERSION 1.0
-    SOURCES
-        src/ui/Backend.cpp
-        src/ui/ProfileListModel.cpp
-        src/ui/AdapterListModel.cpp
-    QML_FILES
-        qml/Main.qml
-        qml/theme/Theme.qml
-        qml/components/Icon.qml
-        qml/components/Card.qml
-        qml/components/PrimaryButton.qml
-        qml/components/SecondaryButton.qml
-        qml/components/IconButton.qml
-        qml/components/StatusCard.qml
-        qml/components/AdapterRow.qml
-        qml/components/SettingRow.qml
-        qml/components/ThemeOption.qml
-        qml/components/DnsCard.qml
-        qml/components/PageHeader.qml
-        qml/components/SidebarItem.qml
-        qml/components/Sidebar.qml
-        qml/components/FormField.qml
-        qml/components/ProfileDialog.qml
-        qml/components/ConfirmDialog.qml
-        qml/components/ToggleSwitch.qml
-        qml/pages/Dashboard.qml
-        qml/pages/Profiles.qml
-        qml/pages/Network.qml
-        qml/pages/Settings.qml
-)
-
-# Plain value models and non-QML services are ordinary target sources.
-target_sources(DnsManager PRIVATE
+# --- dns-core: headless JSON-RPC sidecar for the Electron/React UI --------
+# Reuses the backend sources (core/, models/, platform/) with no business-
+# logic duplication. Speaks NDJSON over stdio; see src/cli/dnscore_main.cpp.
+# This is a console application; Electron spawns it hidden (windowsHide).
+add_executable(dns-core
+    src/cli/dnscore_main.cpp
     src/core/OperationResult.cpp
     src/core/Logging.cpp
     src/core/CrashHandler.cpp
@@ -162,58 +90,51 @@ target_sources(DnsManager PRIVATE
     src/core/ProfileStorage.cpp
     src/core/DnsLatencyTester.cpp
     src/core/AppSettings.cpp
-    src/ui/TrayController.cpp
     src/models/DnsConfiguration.cpp
     src/models/DnsProfile.cpp
     src/models/NetworkAdapter.cpp
     src/platform/WindowsDns.cpp
 )
 
-target_include_directories(DnsManager PRIVATE
+target_include_directories(dns-core PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    # QML type registration includes class headers by bare name (e.g.
-    # <Backend.hpp>), so the dirs containing them must be on the include path.
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/core"
 )
 
-target_link_libraries(DnsManager PRIVATE
+# Single source of truth for the backend version: CMake PROJECT_VERSION is
+# injected as DNSMGR_VERSION so the --version flag, the JSON-RPC "meta" block
+# and the Windows VERSIONINFO resource can never drift apart.
+target_compile_definitions(dns-core PRIVATE
+    DNSMGR_VERSION="${PROJECT_VERSION}"
+)
+
+target_link_libraries(dns-core PRIVATE
     Qt6::Core
-    Qt6::Gui
     Qt6::Network
-    Qt6::Quick
-    Qt6::Qml
-    Qt6::QuickControls2
     Qt6::Concurrent
-    Qt6::Widgets
 )
 
 if(WIN32)
     # Target Windows 10 1809+ so GetInterfaceDnsSettings / SetInterfaceDnsSettings
     # (DNS_INTERFACE_SETTINGS) are available in the SDK headers.
-    target_compile_definitions(DnsManager PRIVATE
+    target_compile_definitions(dns-core PRIVATE
         _WIN32_WINNT=0x0A00
         NTDDI_VERSION=0x0A000005
     )
     # Windows IP Helper API (iphlpapi) + Winsock (ws2_32) for adapter and
     # DNS operations; shell32 for launching the elevated helper (runas);
     # dnsapi for the resolver-cache flush; dbghelp for crash minidumps.
-    target_link_libraries(DnsManager PRIVATE iphlpapi ws2_32 shell32 dnsapi dbghelp)
-    target_sources(DnsManager PRIVATE
-        resources/resources.qrc
-        "${CMAKE_CURRENT_BINARY_DIR}/resources/win/version.rc"
-    )
+    target_link_libraries(dns-core PRIVATE iphlpapi ws2_32 shell32 dnsapi dbghelp)
+    # Windows file-version metadata (visible in Explorer > Properties > Details).
+    target_sources(dns-core PRIVATE resources/win/dns-core.rc)
 endif()
 
 # --- Compiler warnings ----------------------------------------------------
 include(cmake/Warnings.cmake)
-dnsmgr_enable_warnings(DnsManager)
+dnsmgr_enable_warnings(dns-core)
 
-# --- Install / packaging --------------------------------------------------
-install(TARGETS DnsManager
+# --- Install (consumed by electron-builder via extraResources) -------------
+install(TARGETS dns-core
     RUNTIME DESTINATION .
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION lib
 )
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
@@ -223,53 +144,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION .)
 endif()
 
-# Deploy the Qt runtime (DLLs + plugins + QML) next to the installed
-# executable via windeployqt at install time (Qt 6.3+). This is what makes a
-# "portable" install that runs on machines without Qt.
-if(WIN32)
-    qt_generate_deploy_app_script(
-        TARGET DnsManager
-        OUTPUT_SCRIPT dnsmgr_deploy_script
-        NO_UNSUPPORTED_PLATFORM_ERROR
-    )
-    install(SCRIPT ${dnsmgr_deploy_script})
-endif()
-
-# --- CPack (portable ZIP / optional NSIS installer) ------------------------
-set(CPACK_PACKAGE_NAME "DnsManager")
-set(CPACK_PACKAGE_VENDOR "DnsManager")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Modern Windows DNS manager")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/callmeD4N13L/DNS-Manager")
-set(CPACK_PACKAGE_CONTACT "https://github.com/callmeD4N13L/DNS-Manager")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "DnsManager")
-set(CPACK_PACKAGING_INSTALL_PREFIX "DnsManager")
-set(CPACK_PACKAGE_FILE_NAME "DnsManager-${PROJECT_VERSION}-windows-x64")
-set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/app.ico")
-set(CPACK_GENERATOR "ZIP")
-
-if(DNSMGR_BUILD_NSIS)
-    list(APPEND CPACK_GENERATOR "NSIS")
-    set(CPACK_NSIS_DISPLAY_NAME "DNS Manager")
-    set(CPACK_NSIS_PACKAGE_NAME "DNS Manager ${PROJECT_VERSION}")
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/app.ico")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "DnsManager.exe")
-    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/callmeD4N13L/DNS-Manager")
-    set(CPACK_NSIS_CONTACT "https://github.com/callmeD4N13L/DNS-Manager")
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-        set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-    endif()
-endif()
-
-include(CPack)
-
 # --- Tests ----------------------------------------------------------------
 if(DNSMGR_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)
 endif()
 
-# --- CMake version compatibility guard ------------------------------------
-# qt_add_executable / qt_standard_project_setup require a recent-enough
-# CMake + Qt combination; this is enforced by find_package above.
-message(STATUS "DnsManager ${PROJECT_VERSION} | Qt ${Qt6_VERSION} | C++${CMAKE_CXX_STANDARD}")
+message(STATUS "DnsManager ${PROJECT_VERSION} | Qt ${Qt6_VERSION} (Core backend) | C++${CMAKE_CXX_STANDARD}")

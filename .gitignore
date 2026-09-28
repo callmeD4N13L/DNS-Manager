@@ -77,3 +77,27 @@ config/dns_profiles.json
 Thumbs.db
 Desktop.ini
 ehthumbs.db
+
+# Electron / Node (electron-app/)
+node_modules/
+electron-app/node_modules/
+electron-app/release/
+electron-app/dist/
+electron-app/electron/dist/
+electron-app/renderer/dist/
+electron-app/*.log
+*.tsbuildinfo
+
+# Installer output (Inno Setup / electron-builder staging)
+installer/output/
+installer/*.log
+*.iss.compiled
+Output/
+Setup-*.exe
+*-portable.exe
+*-setup.exe
+
+# Local dev / OS extras
+*.swp
+*.orig
+.DS_Store

@@ -1,0 +1,46 @@
+{
+  "name": "dnsmanager-electron",
+  "version": "2.0.0",
+  "description": "Modern Windows DNS manager — Electron + React UI over the C++ dns-core backend",
+  "private": true,
+  "author": "DnsManager Contributors",
+  "homepage": "https://github.com/callmeD4N13L/DNS-Manager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/callmeD4N13L/DNS-Manager.git"
+  },
+  "license": "MIT",
+  "main": "electron/dist/main.js",
+  "scripts": {
+    "dev:renderer": "vite --config renderer/vite.config.ts",
+    "dev:electron": "tsc -p electron && electron .",
+    "dev": "concurrently -k -n RENDERER,ELECTRON \"npm run dev:renderer\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "build:renderer": "vite build --config renderer/vite.config.ts",
+    "build:electron": "tsc -p electron",
+    "build": "npm run build:electron && npm run build:renderer",
+    "dist": "npm run build && electron-builder",
+    "dist:portable": "npm run build && electron-builder --win portable",
+    "smoke:bridge": "node scripts/smoke-dnscore.mjs",
+    "typecheck": "tsc -p renderer --noEmit && tsc -p electron --noEmit"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^37.2.4",
+    "electron-builder": "^26.0.12",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.3"
+  },
+  "dependencies": {
+    "framer-motion": "^12.18.1",
+    "lucide-react": "^0.469.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

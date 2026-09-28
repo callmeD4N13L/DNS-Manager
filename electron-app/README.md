@@ -1,4 +1,4 @@
-# DNS Manager — Electron + React UI over the C++ backend
+# Dancy — Electron + React UI over the C++ backend
 
 The entire user interface is rendered by **Electron → Chromium → React +
 TypeScript + Tailwind CSS + Framer Motion**. All DNS, networking, security and

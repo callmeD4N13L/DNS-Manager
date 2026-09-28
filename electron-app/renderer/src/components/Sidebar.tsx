@@ -4,6 +4,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Gauge, Layers, ChevronsLeft, ChevronsRight, Settings, Wifi } from "lucide-react";
+import logoUrl from "../assets/dancy.png";
 import { useApp } from "../store";
 import { cn } from "../utils";
 import type { PageKey } from "../types";
@@ -34,9 +35,7 @@ export function Sidebar() {
     >
       {/* brand */}
       <div className="flex h-14 shrink-0 items-center gap-2.5 px-4">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-accent text-[15px] font-bold text-accent-ink shadow-[0_0_16px_-4px_rgba(34,211,238,0.8)]">
-          D
-        </span>
+        <img src={logoUrl} alt="Dancy" className="h-8 w-8 shrink-0 rounded-[10px] object-cover shadow-[0_0_16px_-4px_rgba(34,211,238,0.8)]" draggable={false} />
         {!sidebarCollapsed && (
           <motion.div
             initial={{ opacity: 0, x: -6 }}
@@ -44,7 +43,7 @@ export function Sidebar() {
             className="min-w-0"
           >
             <div className="truncate text-[13.5px] font-semibold tracking-tight text-ink">
-              DNS Manager
+              Dancy
             </div>
             <div className="truncate font-mono text-[10.5px] text-ink-faint">
               {currentDns?.adapterName || "no adapter"}

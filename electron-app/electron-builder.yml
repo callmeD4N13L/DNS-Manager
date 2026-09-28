@@ -1,5 +1,5 @@
 appId: com.dnsmanager.app
-productName: DNS Manager
+productName: Dancy
 copyright: Copyright © DnsManager Contributors
 # Modular + lightweight: the UI ships as an asar bundle, the C++ backend as a
 # separate sidecar (resources/bin/dns-core.exe) so each layer can be serviced
@@ -40,8 +40,8 @@ nsis:
   perMachine: false
   differentialPackage: false
   packElevateHelper: false
-  shortcutName: DNS Manager
-  uninstallDisplayName: DNS Manager
+  shortcutName: Dancy
+  uninstallDisplayName: Dancy
   artifactName: DNSManager-${version}-windows-${arch}-setup-electron.exe
 portable:
   artifactName: DNSManager-${version}-windows-${arch}-portable.exe

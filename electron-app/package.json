@@ -1,7 +1,7 @@
 {
   "name": "dnsmanager-electron",
   "version": "2.0.0",
-  "description": "Modern Windows DNS manager — Electron + React UI over the C++ dns-core backend",
+  "description": "Dancy — modern Windows DNS manager: Electron + React UI over the C++ dns-core backend",
   "private": true,
   "author": "DnsManager Contributors",
   "homepage": "https://github.com/callmeD4N13L/DNS-Manager",

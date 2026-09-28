@@ -1,4 +1,4 @@
-# Building DnsManager
+# Building Dancy
 
 This document explains how to configure, build, run and test DnsManager on
 Windows 10/11 using Visual Studio, Visual Studio Code or the command line.

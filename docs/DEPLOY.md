@@ -1,4 +1,4 @@
-# Deploying & Packaging DnsManager
+# Deploying & Packaging Dancy
 
 The shipped product is the **Electron desktop app** (`electron-app/`) with the
 C++ `dns-core.exe` sidecar bundled inside it. There is no Qt UI to deploy and

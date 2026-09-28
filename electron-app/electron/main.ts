@@ -101,7 +101,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 960,
     minHeight: 620,
-    title: "DNS Manager",
+    title: "Dancy",
     backgroundColor: "#0a0f16",
     autoHideMenuBar: true,
     // Custom title bar rendered by the React UI (TitleBar.tsx):
@@ -178,7 +178,7 @@ async function rebuildTrayMenu(): Promise<void> {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
-        label: "Open DNS Manager",
+        label: "Open Dancy",
         click: () => showWindow(),
       },
       { type: "separator" },
@@ -231,7 +231,7 @@ function ensureTray(): void {
   let image = nativeImage.createFromPath(iconPath);
   if (image.isEmpty()) image = nativeImage.createEmpty();
   tray = new Tray(image);
-  tray.setToolTip("DNS Manager");
+  tray.setToolTip("Dancy");
   void rebuildTrayMenu();
   // Single click opens the app; right-click shows the menu above.
   tray.on("click", () => showWindow());
@@ -420,7 +420,7 @@ if (!gotLock) {
               "document.body.innerText.slice(0, 400)",
               true,
             );
-            if (typeof text === "string" && /DNS Manager/.test(text) && /ms|DHCP|profiles/i.test(text)) {
+            if (typeof text === "string" && /Dancy/.test(text) && /ms|DHCP|profiles/i.test(text)) {
               console.log(`SMOKE-OK renderer painted (${Date.now() - started}ms):`);
               console.log(String(text).slice(0, 300));
               bridge.stop();

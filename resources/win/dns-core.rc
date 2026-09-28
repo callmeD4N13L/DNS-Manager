@@ -3,6 +3,8 @@
 // Keep in sync when bumping the project version.
 #include <winver.h>
 
+IDI_ICON1 ICON "app.ico"
+
 VS_VERSION_INFO VERSIONINFO
   FILEVERSION     2, 0, 0, 0
   PRODUCTVERSION  2, 0, 0, 0
@@ -21,7 +23,7 @@ BEGIN
       VALUE "FileVersion",      "2.0.0"
       VALUE "InternalName",     "dns-core"
       VALUE "OriginalFilename", "dns-core.exe"
-      VALUE "ProductName",      "DNS Manager"
+      VALUE "ProductName",      "Dancy"
       VALUE "ProductVersion",   "2.0.0"
     END
   END

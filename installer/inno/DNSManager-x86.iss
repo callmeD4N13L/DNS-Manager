@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; DNS Manager — Inno Setup script (32-bit build)
+; Dancy — Inno Setup script (32-bit build)
 ;
 ; Produces: DNSManager-<version>-windows-x86-setup.exe
 ; Built in CI (.github/workflows/release.yml) after electron-builder emits
@@ -12,13 +12,13 @@
 ; See also: installer/inno/SUPPORT.txt (installed next to the app) and README.
 ; ---------------------------------------------------------------------------
 
-#define AppName "DNS Manager"
+#define AppName "Dancy"
 #ifndef AppVersion
   #define AppVersion "2.0.0"
 #endif
 #define AppPublisher "DnsManager Contributors"
 #define AppURL "https://github.com/callmeD4N13L/DNS-Manager"
-#define AppExeName "DNS Manager.exe"
+#define AppExeName "Dancy.exe"
 
 [Setup]
 AppId={{7A1C3E5B-2B6D-4A9C-8D1B-DNSMANAGER32}}
@@ -29,7 +29,7 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}/releases
-DefaultDirName={autopf}\DNS Manager (32-bit)
+DefaultDirName={autopf}\Dancy (32-bit)
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import logoUrl from "./assets/dancy.png";
 import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { TopBar } from "./components/TopBar";
@@ -18,15 +19,16 @@ import { useApp } from "./store";
 function BootScreen({ message }: { message: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 bg-abyss">
-      <motion.span
+      <motion.img
+        src={logoUrl}
+        alt="Dancy"
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 22 }}
-        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-xl font-bold text-accent-ink shadow-[0_0_28px_-6px_rgba(34,211,238,0.8)]"
-      >
-        D
-      </motion.span>
-      <div className="text-[14px] font-semibold text-ink">DNS Manager</div>
+        className="h-12 w-12 rounded-2xl object-cover shadow-[0_0_28px_-6px_rgba(34,211,238,0.8)]"
+        draggable={false}
+      />
+      <div className="text-[14px] font-semibold text-ink">Dancy</div>
       <div className="font-mono text-[11.5px] text-ink-faint">{message}</div>
     </div>
   );

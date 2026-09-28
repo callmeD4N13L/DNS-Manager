@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
- * DNS Manager design system — single source of truth for the whole renderer.
+ * Dancy design system — single source of truth for the whole renderer.
  * Dark-first with a fully-specified light theme. All surfaces/inks are CSS
  * vars so Tailwind utilities (bg-abyss, text-ink, ...) follow the theme.
  * ------------------------------------------------------------------------- */

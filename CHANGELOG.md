@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to DNS Manager are documented here. The format follows
+All notable changes to Dancy are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
@@ -34,6 +34,10 @@ adheres to [Semantic Versioning](https://semver.org/).
 - Smoother UI: global smooth scrolling with themed slim scrollbars,
   card lift on hover, staggered entrances, animated boot screen and page
   transitions.
+- Rebrand to **Dancy**: self-generated teal dancer badge (`assets/Dancy.png`,
+  `scripts/generate-dancy-icon.ps1`) now used for `app.ico`, `dns-core.exe`,
+  `Dancy.exe`, the installers, the in-app logo, the README header and all
+  user-visible names/descriptions.
 
 ## [2.0.0] — 2026-09-28
 

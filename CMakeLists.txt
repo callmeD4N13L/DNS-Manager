@@ -14,7 +14,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(DnsManager
     VERSION 2.0.0
-    DESCRIPTION "Modern Windows DNS manager (C++ backend + Electron/React UI)"
+    DESCRIPTION "Dancy - modern Windows DNS manager (C++ backend + Electron/React UI)"
     HOMEPAGE_URL "https://github.com/callmeD4N13L/DNS-Manager"
     LANGUAGES CXX
 )

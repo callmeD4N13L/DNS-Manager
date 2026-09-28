@@ -201,7 +201,7 @@ export function CloseDialog({
     <AnimatePresence>
       {open && (
         <Modal
-          title="Close DNS Manager?"
+          title="Close Dancy?"
           description="The app can keep running in the system tray so you can switch profiles or re-open it from the notification area."
           onClose={onCancel}
           footer={
@@ -215,7 +215,7 @@ export function CloseDialog({
           }
         >
           <p className="text-[13px] leading-relaxed text-ink-dim">
-            Minimized to the tray, DNS Manager stays available next to the clock:
+            Minimized to the tray, Dancy stays available next to the clock:
             right-click the tray icon to apply a profile or flush the cache, or
             click it to re-open the window.
           </p>

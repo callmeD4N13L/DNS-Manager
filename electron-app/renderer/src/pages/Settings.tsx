@@ -113,7 +113,7 @@ export function Settings() {
         <div className="flex flex-col gap-1.5 text-[12.5px]">
           <div className="flex justify-between">
             <span className="text-ink-dim">Application</span>
-            <span className="font-semibold text-ink">DNS Manager {app.meta?.version}</span>
+            <span className="font-semibold text-ink">Dancy {app.meta?.version}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-ink-dim">Backend</span>

@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="assets/ModernD.PNG" alt="Dancy — DNS Manager icon" width="96" />
+  <img src="assets/Dancy.png" alt="Dancy — project icon" width="128" />
 </p>
 
-# <img src="assets/ModernD.PNG" alt="D" width="28" /> ModernD DNS Manager
+# Dancy
 
-> Switch, benchmark and troubleshoot your Windows DNS configuration from a
-> modern desktop UI — no registry hacking, no command line.
+> **Dancy** — switch, benchmark and troubleshoot your Windows DNS
+> configuration from a modern desktop UI — no registry hacking, no command
+> line.
 
 [![CI](https://github.com/callmeD4N13L/DNS-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/callmeD4N13L/DNS-Manager/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/callmeD4N13L/DNS-Manager)](https://github.com/callmeD4N13L/DNS-Manager/releases)
@@ -14,12 +15,13 @@
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599c)](CMakeLists.txt)
 [![Electron](https://img.shields.io/badge/Electron-Chromium-47848f)](electron-app/)
 
-A fast, lightweight **DNS manager for Windows 10/11** built with **C++20**
-and **Electron + Chromium + React + TypeScript**. Inspect every adapter's DNS, switch between saved
-profiles with one click, benchmark resolvers, flush the cache and reset back
-to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
+**Dancy** is a fast, lightweight **DNS manager for Windows 10/11** built
+with **C++20** and **Electron + Chromium + React + TypeScript**. Inspect
+every adapter's DNS, switch between saved profiles with one click, benchmark
+resolvers, flush the cache and reset back to DHCP — with explicit,
+never-silent UAC elevation for the privileged bits.
 
-![ModernD icon](assets/ModernD.PNG)
+![Dancy icon](assets/Dancy.png)
 
 ---
 
@@ -153,7 +155,7 @@ pull request for improvements. Follow the existing code style
 
 ## Support
 
-DNS Manager is free and open source (MIT). If it saves you time, consider
+Dancy is free and open source (MIT). If it saves you time, consider
 supporting maintenance and new resolvers:
 
 **Ethereum / EVM (MetaMask):**

@@ -3,6 +3,7 @@
 
 import { Copy, Minus, Square, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import logoUrl from "../assets/dancy.png";
 import { cn } from "../utils";
 
 function win() {
@@ -38,10 +39,8 @@ export function TitleBar({ onRequestClose }: { onRequestClose: () => void }) {
 
   return (
     <div className="titlebar-drag flex h-9 shrink-0 items-center gap-2 border-b border-line-soft bg-abyss/95 pr-0 pl-3 select-none">
-      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-accent text-[11px] font-bold text-accent-ink">
-        D
-      </span>
-      <span className="text-[12px] font-medium text-ink-dim">DNS Manager</span>
+      <img src={logoUrl} alt="Dancy" className="h-5 w-5 rounded-md object-cover" draggable={false} />
+      <span className="text-[12px] font-medium text-ink-dim">Dancy</span>
       <div className="flex-1" />
       <div className="flex items-stretch">
         <button className={btn} title="Minimize" aria-label="Minimize window" onClick={min} tabIndex={-1}>

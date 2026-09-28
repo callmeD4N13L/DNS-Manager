@@ -1,4 +1,4 @@
-# Windows DNS Manager
+# ModernD DNS Manager
 
 > Switch, benchmark and troubleshoot your Windows DNS configuration from a
 > modern desktop UI — no registry hacking, no command line.
@@ -31,13 +31,6 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 - Import / export profiles as portable JSON
 - Seeded with popular resolvers (Cloudflare, Google, Quad9, AdGuard)
 
-**Actions**
-
-- Apply any profile to the selected adapter (with confirmation option)
-- Reset DNS back to automatic (DHCP)
-- Flush the Windows DNS resolver cache
-- Benchmark the adapter's DNS servers and show the fastest latency
-
 **Application**
 
 - Dark / light / system theme, system tray integration
@@ -50,30 +43,7 @@ to DHCP — with explicit, never-silent UAC elevation for the privileged bits.
 Download the latest release from
 [Releases](https://github.com/callmeD4N13L/DNS-Manager/releases):
 
-| File | What it is |
-| ---- | ---------- |
-| `DNSManager-<version>-windows-x64-setup.exe` | **Recommended.** Inno Setup installer, 64-bit Windows |
-| `DNSManager-<version>-windows-x86-setup.exe` | Inno Setup installer, 32-bit shell |
-| `DNSManager-<version>-windows-x64-setup-electron.exe` | NSIS installer, 64-bit |
-| `DNSManager-<version>-windows-x64-portable.exe` | No install — just run it |
-
-No Qt, no Node, no admin rights needed for the UI — elevation (UAC) is
-requested only for actual DNS changes.
-
 Or build from source (see [docs/BUILD.md](docs/BUILD.md)):
-
-```powershell
-cmake --preset vs2022-release
-cmake --build --preset vs2022-release --target dns-core
-cd electron-app
-npm install
-npm run dev            # or: npm run build + npm run dist:portable
-```
-
-## Screenshots
-
-Screenshots are welcome — add them under `docs/screenshots/` and link them
-here via a pull request.
 
 ## Documentation
 
@@ -160,8 +130,8 @@ pull request for improvements. Follow the existing code style
 DNS Manager is free and open source (MIT). If it saves you time, consider
 supporting maintenance and new resolvers:
 
-**Ethereum / EVM (MetaMask): `0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5`**
+**Ethereum / EVM (MetaMask): 
+```Wallet Address
+0x3f9A75Bd8bc2B4A703Ce071275D7B0ec2bED12E5
+```
 
-## License
-
-[MIT](LICENSE) — DnsManager Contributors.
